@@ -1,0 +1,47 @@
+{
+  "functions": {
+    "source": "functions",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log"
+    ],
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run lint || echo 'skip lint'",
+      "npm --prefix \"$RESOURCE_DIR\" run build || echo 'skip build'"
+    ]
+  },
+  "emulators": {
+    "functions": {
+      "port": 5005
+    },
+    "firestore": {
+      "port": 8081
+    },
+    "auth": {
+      "port": 9100
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true,
+      "port": 5050
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "singleProjectMode": true
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
