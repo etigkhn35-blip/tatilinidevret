@@ -1,112 +1,53 @@
 import { NextResponse } from "next/server";
-<<<<<<< HEAD
-
-// Nodemailer’ın Next.js bundle içine girmemesi için require kullanıyoruz
-const nodemailer = require("nodemailer");
-
-export async function POST(req: Request) {
-  try {
-    const rawBody = await req.text();
-
-    // PAYTR doğrulama işlemin burada yapılacak (şimdilik direkt OK)
-    console.log("PAYTR Callback Body:", rawBody);
-
-    // ---- MAIL ----
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      tls: { rejectUnauthorized: false },
-    });
-
-    await transporter.sendMail({
-      from: process.env.MAIL_FROM,
-      to: process.env.ADMIN_EMAIL_TO,
-      subject: "PAYTR Ödeme Bildirimi",
-      html: `
-        <h2>Yeni PAYTR ödeme bildirimi alındı</h2>
-        <pre>${rawBody}</pre>
-      `,
-    });
-
-    return new NextResponse("OK", { status: 200 });
-  } catch (err) {
-    console.error("PAYTR CALLBACK ERROR:", err);
-    return new NextResponse("ERR", { status: 500 });
-=======
 import crypto from "crypto";
-import { db } from "@/lib/firebaseConfig";
-import { doc, updateDoc, addDoc, collection, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebaseAdmin"; // Admin SDK bağlantısı
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const form = await req.formData();
 
-    const {
-      merchant_oid,
-      status,
-      total_amount,
-      hash,
-      test_mode
-    } = body;
+    const status = form.get("status")?.toString() || "";
+    const merchant_oid = form.get("merchant_oid")?.toString() || "";
+    const total_amount = form.get("total_amount")?.toString() || "";
+    const hash = form.get("hash")?.toString() || "";
 
-    // PAYTR HASH DOĞRULAMA
-    const merchant_key = process.env.PAYTR_MERCHANT_KEY!;
-    const merchant_salt = process.env.PAYTR_MERCHANT_SALT!;
-
-    const hash_str = merchant_oid + merchant_salt + status + total_amount;
-    const generated_hash = crypto
-      .createHmac("sha256", merchant_key)
-      .update(hash_str)
-      .digest("base64");
-
-    if (generated_hash !== hash) {
-      console.log("❌ HASH UYUŞMUYOR");
-      return NextResponse.json({ ok: false });
+    if (!merchant_oid) {
+      return NextResponse.json({ ok: false, error: "merchant_oid boş" });
     }
 
-    // --- ÖDEME BAŞARILI ---
+    // PAYTR doğrulama
+    const paytrKey = process.env.PAYTR_MERCHANT_KEY!;
+    const paytrSalt = process.env.PAYTR_MERCHANT_SALT!;
+    const generatedHash = crypto
+      .createHash("sha256")
+      .update(merchant_oid + paytrSalt + status + total_amount + paytrKey)
+      .digest("hex");
+
+    if (generatedHash !== hash) {
+      console.error("❌ HASH UYUŞMUYOR!");
+      return NextResponse.json({ ok: false, error: "hash mismatch" });
+    }
+
+    // 🔥 Ödeme başarılıysa Firestore'a kayıt
     if (status === "success") {
-      const ilanRef = doc(db, "ilanlar", merchant_oid);
-      await updateDoc(ilanRef, {
-        odemeDurumu: "başarılı",
-        odemeTarihi: Timestamp.now(),
-        status: "pending"   // admin onaylayacak
-      });
+      await db
+        .collection("odeme_bildirimleri")
+        .doc(merchant_oid)
+        .set(
+          {
+            status,
+            total_amount,
+            updatedAt: new Date(),
+          },
+          { merge: true }
+        );
 
-      // Admin’e bildirim
-      await addDoc(collection(db, "notifications"), {
-        toUserUid: "admin",
-        type: "payment",
-        title: "Yeni Ödeme Geldi",
-        message: `Bir ilan için ödeme başarıyla alındı.`,
-        ilanId: merchant_oid,
-        createdAt: Timestamp.now(),
-        read: false
-      });
-
-      return NextResponse.json({ ok: true });
-    }
-
-    // --- ÖDEME BAŞARISIZ ---
-    if (status === "failed") {
-      const ilanRef = doc(db, "ilanlar", merchant_oid);
-      await updateDoc(ilanRef, {
-        odemeDurumu: "başarısız",
-        status: "draft",
-      });
-
-      return NextResponse.json({ ok: false });
+      console.log("✔ Ödeme kaydedildi:", merchant_oid);
     }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("PAYTR CALLBACK ERROR:", err);
-    return NextResponse.json({ ok: false }, { status: 500 });
->>>>>>> c8b9a6f0e2683cb041606b110145c34e46dffd13
+    console.error("❌ PAYTR CALLBACK ERROR:", err);
+    return NextResponse.json({ ok: false, error: "server error" });
   }
 }
