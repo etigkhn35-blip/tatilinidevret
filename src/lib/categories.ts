@@ -4,32 +4,40 @@ export const kategoriler = [
     altKategoriler: [
       "Otel",
       "Villa / Yazlık",
-      "Airbnb & Booking Rezervasyonları",
+      "Airbnb & Booking Rezervasyonu",
       "Bungalow / Tiny House",
       "Dağ / Yayla Evi",
+      "Tatil Köyü",
+      "Apart / Rezidans",
     ],
     resim: "/images/categories/konaklama.jpg",
+    icon: "🏨",
   },
   {
     anaKategori: "Deneyim Tatilleri",
     altKategoriler: [
-      "Tekne / Yat",
-      "Cruise (Gemi Turları)",
+      "Tekne / Yat Tatili",
+      "Cruise (Gemi Turu)",
       "Kamp / Glamping",
-      "Wellness & Spa",
+      "Wellness & Spa Tatili",
       "Yoga / Retreat",
+      "Gastronomi Tatili 🍷",
     ],
     resim: "/images/categories/deneyim.jpg",
+    icon: "⛵",
   },
   {
     anaKategori: "Turlar",
     altKategoriler: [
       "Kültür Turları",
-      "Doğa & Trekking",
+      "Doğa & Trekking Turları",
       "Karadeniz / GAP Turları",
       "Kayak Turları",
+      "Günübirlik Turlar",
+      "Balayı Turları",
     ],
     resim: "/images/categories/turlar.jpg",
+    icon: "🚌",
   },
   {
     anaKategori: "Etkinlik Paketleri",
@@ -38,7 +46,11 @@ export const kategoriler = [
       "Konser + Konaklama",
       "Spor Etkinliği + Otel",
       "Kültür & Sanat + Otel",
+      "Workshop + Tatil",
     ],
     resim: "/images/categories/etkinlik.jpg",
+    icon: "🎟️",
   },
 ];
+
+export const CATEGORIES = kategoriler;
