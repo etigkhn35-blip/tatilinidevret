@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { auth, db, storage } from "@/lib/firebaseConfig";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import { CATEGORY_FIELDS } from "@/data/categoryFields";
@@ -228,30 +228,49 @@ export default function IlanVerPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  /* ------------------------------ Effects ------------------------------ */
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      if (u) {
-        setUser(u);
-      } else {
-        router.push("/giris");
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
+/* ------------------------------ Effects ------------------------------ */
+useEffect(() => {
+  const unsubscribe = auth.onAuthStateChanged((u) => {
+    if (u) {
+      setUser(u);
+    } else {
+      router.push("/giris");
+    }
+  });
+  return () => unsubscribe();
+}, [router]);
 
-  useEffect(() => {
-    setSubOptions(category ? CATEGORIES[category] : []);
-    setSubCategory("");
-    // kategori değişince özel alanlar korunur
-  }, [category]);
+/* 🟦 Kullanıcının ilk ilanı mı? — BURADA KONTROL EDİYORUZ */
+useEffect(() => {
+  if (!user?.uid) return;
 
-  const nights = useMemo(() => {
-    if (!checkIn || !checkOut) return 0;
-    const a = new Date(checkIn).getTime();
-    const b = new Date(checkOut).getTime();
-    return Math.max(0, Math.ceil((b - a) / (1000 * 60 * 60 * 24)));
-  }, [checkIn, checkOut]);
+  const q = query(
+    collection(db, "ilanlar"),
+    where("sahipUid", "==", user.uid)
+  );
+
+  getDocs(q).then((snap) => {
+    if (snap.size > 0) {
+      setIsFirstListing(false);
+    } else {
+      setIsFirstListing(true);
+    }
+  });
+}, [user]);
+
+/* Alt kategori seçeneklerini güncelle */
+useEffect(() => {
+  setSubOptions(category ? CATEGORIES[category] : []);
+  setSubCategory("");
+}, [category]);
+
+/* Kaç gece kalınacak hesaplama */
+const nights = useMemo(() => {
+  if (!checkIn || !checkOut) return 0;
+  const a = new Date(checkIn).getTime();
+  const b = new Date(checkOut).getTime();
+  return Math.max(0, Math.ceil((b - a) / (1000 * 60 * 60 * 24)));
+}, [checkIn, checkOut]);
 
   /* ----------------------------- Handlers ----------------------------- */
   const onCoverChange = (f: File | null) => {

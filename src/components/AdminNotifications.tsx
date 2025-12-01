@@ -14,6 +14,19 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-toastify";
 
+type Notif = {
+  id: string;
+  title?: string;
+  message?: string;
+  read?: boolean;
+  createdAt?: any;
+  type?: string;
+  chatId?: string;
+  path?: string;
+  toUserUid?: string;
+};
+
+
 export default function AdminNotifications() {
   const [newMsgCount, setNewMsgCount] = useState(0);
   const [newNotifCount, setNewNotifCount] = useState(0);
@@ -40,19 +53,25 @@ export default function AdminNotifications() {
 
   // 🔔 Bildirimleri dinle
   useEffect(() => {
-    const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(10));
-    const unsub = onSnapshot(q, (snap) => {
-      const unread = snap.docs.filter((d) => !d.data().read).length;
-      setNewNotifCount(unread);
+  const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(10));
+  const unsub = onSnapshot(q, (snap) => {
+    
+    const notifs: Notif[] = snap.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as any),
+    }));
 
-      if (unread > 0) {
-        toast("🔔 Yeni bildirim!", { position: "top-right", autoClose: 3000 });
-        if (audioRef.current) audioRef.current.play().catch(() => {});
-      }
-    });
-    return () => unsub();
-  }, []);
+    const unread = notifs.filter((n) => !n.read).length;
+    setNewNotifCount(unread);
 
+    if (unread > 0) {
+      toast("🔔 Yeni bildirim!", { position: "top-right", autoClose: 3000 });
+      audioRef.current?.play().catch(() => {});
+    }
+  });
+
+  return () => unsub();
+}, []);
   return (
     <div className="relative flex items-center gap-5">
       {/* 💬 Mesajlar */}
@@ -81,3 +100,4 @@ export default function AdminNotifications() {
     </div>
   );
 }
+

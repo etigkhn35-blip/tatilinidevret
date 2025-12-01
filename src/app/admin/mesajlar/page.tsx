@@ -7,7 +7,7 @@ import {
   collection,
   query,
   where,
-  orderBy, // 🔹 eklendi
+  orderBy,
   onSnapshot,
   addDoc,
   doc,
@@ -47,6 +47,9 @@ export default function AdminMesajlarPage() {
   const searchParams = useSearchParams();
   const chatFromUrl = searchParams.get("chat");
 
+  // 🔹 Her sohbet için aktif messages listener'ını saklayalım
+  const messagesUnsubRef = useRef<null | (() => void)>(null);
+
   /* -------------------- Ses -------------------- */
   useEffect(() => {
     audioRef.current = new Audio("/sounds/new-message.mp3");
@@ -63,49 +66,51 @@ export default function AdminMesajlarPage() {
 
   /* -------------------- Sohbetleri getir -------------------- */
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  // 🔥 updatedAt olmayan sohbetler yüzünden boş geliyordu → düzeltildi
-  const q = query(collection(db, "messages"));
+    const q = query(collection(db, "messages"));
 
-  const unsub = onSnapshot(q, async (snap) => {
-    const list: Chat[] = [];
+    const unsub = onSnapshot(q, async (snap) => {
+      const list: Chat[] = [];
 
-    for (const d of snap.docs) {
-      const raw = d.data() as any;
-      const chat: Chat = {
-        id: d.id,
-        participants: raw.participants || [],
-        lastMessage: raw.lastMessage || "",
-        updatedAt: raw.updatedAt,
-        ilanBaslik: raw.ilanBaslik || "",
-      };
+      for (const d of snap.docs) {
+        const raw = d.data() as any;
+        const chat: Chat = {
+          id: d.id,
+          participants: raw.participants || [],
+          lastMessage: raw.lastMessage || "",
+          updatedAt: raw.updatedAt,
+          ilanBaslik: raw.ilanBaslik || "",
+        };
 
-      const otherId = chat.participants?.find((p) => p !== "admin");
-      if (otherId) {
-        const uDoc = await getDoc(doc(db, "users", otherId));
-        if (uDoc.exists()) {
-          const data = uDoc.data();
-          chat.otherEmail = data.email || data.adSoyad || "Kullanıcı";
-        } else {
-          chat.otherEmail = "Kullanıcı";
+        // sadece admin'in dahil olduğu sohbetler ilgilendiriyorsa burada filtreleyebilirsin:
+        // if (!chat.participants.includes("admin")) continue;
+
+        const otherId = chat.participants?.find((p) => p !== "admin");
+        if (otherId) {
+          const uDoc = await getDoc(doc(db, "users", otherId));
+          if (uDoc.exists()) {
+            const data = uDoc.data() as any;
+            chat.otherEmail = data.email || data.adSoyad || "Kullanıcı";
+          } else {
+            chat.otherEmail = "Kullanıcı";
+          }
         }
+        list.push(chat);
       }
-      list.push(chat);
-    }
 
-    // 🔥 updatedAt olmayanlarda hata çıkmasın diye fallback eklendi
-    list.sort((a, b) => {
-      const at = a.updatedAt?.toMillis?.() || 0;
-      const bt = b.updatedAt?.toMillis?.() || 0;
-      return bt - at;
+      list.sort((a, b) => {
+        const at = a.updatedAt?.toMillis?.() || 0;
+        const bt = b.updatedAt?.toMillis?.() || 0;
+        return bt - at;
+      });
+
+      setChats(list);
     });
 
-    setChats(list);
-  });
+    return () => unsub();
+  }, [user]);
 
-  return () => unsub();
-}, [user]);
   /* -------------------- URL'den direkt yükleme -------------------- */
   const loadChatDirect = async (chatId: string) => {
     try {
@@ -134,6 +139,12 @@ export default function AdminMesajlarPage() {
 
   /* -------------------- Sohbet aç -------------------- */
   const openChat = (chat: Chat) => {
+    // Eski listener'ı kapat
+    if (messagesUnsubRef.current) {
+      messagesUnsubRef.current();
+      messagesUnsubRef.current = null;
+    }
+
     setSelectedChat(chat);
 
     const q = query(
@@ -159,16 +170,17 @@ export default function AdminMesajlarPage() {
         firstSnapSeenRef.current[chat.id] = true;
       }
 
-      // okundu güncelle
+      // okundu güncelle (kullanıcıdan gelenler için)
       snap.docs.forEach(async (d0) => {
-        const data = d0.data();
+        const data = d0.data() as any;
         if (data.senderId !== "admin" && !data.read) {
           await updateDoc(d0.ref, { read: true });
         }
       });
     });
 
-    return unsub;
+    // aktif listener'ı sakla
+    messagesUnsubRef.current = unsub;
   };
 
   /* -------------------- Mesaj gönder -------------------- */
@@ -176,6 +188,7 @@ export default function AdminMesajlarPage() {
     if (!selectedChat || !newMessage.trim() || !user) return;
     const msgText = newMessage.trim();
 
+    // alt koleksiyona mesaj ekle
     await addDoc(collection(db, "messages", selectedChat.id, "messages"), {
       senderId: "admin",
       text: msgText,
@@ -183,12 +196,14 @@ export default function AdminMesajlarPage() {
       read: false,
     });
 
+    // ana sohbet dokümanını güncelle
     await updateDoc(doc(db, "messages", selectedChat.id), {
       lastMessage: msgText,
       updatedAt: serverTimestamp(),
+      lastSenderId: "admin", // 🔹 EKLENDİ
     });
 
-    // 🔹 Kullanıcıya bildirim gönder
+    // 🔹 Kullanıcıya bildirim gönder (kullanıcı uid'si)
     const targetUid = selectedChat.participants.find((p) => p !== "admin");
     if (targetUid) {
       await addDoc(collection(db, "notifications"), {
@@ -219,6 +234,12 @@ export default function AdminMesajlarPage() {
       });
       await deleteDoc(doc(db, "messages", chatId));
       subUnsub();
+
+      // Eğer silinen sohbet açık ise UI'dan temizle
+      if (selectedChat?.id === chatId) {
+        setSelectedChat(null);
+        setMessages([]);
+      }
     }
   };
 
@@ -242,9 +263,8 @@ export default function AdminMesajlarPage() {
                 <li
                   key={c.id}
                   onClick={() => {
-  setSelectedChat(c);
-  openChat(c);      
-}}
+                    openChat(c);
+                  }}
                   className={`p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition ${
                     selectedChat?.id === c.id
                       ? "bg-blue-50 border-blue-400"

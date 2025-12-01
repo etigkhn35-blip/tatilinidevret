@@ -26,7 +26,7 @@ export default function CategoriesAccordion() {
 
               {isOpen && (
                 <ul className="mt-2 space-y-1">
-                  {data.subs.map((s) => (
+                  {data.altKategoriler.map((s) => (                 
                     <li key={s}>
                       <a
                         href={`/kategori/${encodeURIComponent(s)}`}

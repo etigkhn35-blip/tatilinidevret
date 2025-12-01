@@ -1,11 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
-export default function IlanlarPage() {
+function IlanlarContent() {
   const params = useSearchParams();
   const [ilanlar, setIlanlar] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,28 +61,30 @@ export default function IlanlarPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {ilanlar.map((ilan) => (
-            <div key={ilan.id} className="border rounded-lg shadow-sm bg-white p-4 hover:shadow-md transition">
-              {/* Görsel */}
+            <div
+              key={ilan.id}
+              className="border rounded-lg shadow-sm bg-white p-4 hover:shadow-md transition"
+            >
               <img
-                src={ilan.coverUrl || `/defaults/${ilan.altKategori?.toLowerCase().replace(/\s+/g, "-")}.jpg` || "/defaults/fallback.jpg"}
+                src={
+                  ilan.coverUrl ||
+                  `/defaults/${ilan.altKategori?.toLowerCase()?.replace(/\s+/g, "-")}.jpg` ||
+                  "/defaults/fallback.jpg"
+                }
                 alt={ilan.baslik}
                 className="w-full h-48 object-cover rounded-lg mb-3"
               />
 
-              {/* Başlık */}
               <h2 className="font-semibold text-lg mb-1">{ilan.baslik}</h2>
 
-              {/* Konum */}
               <p className="text-gray-600 text-sm mb-1">
                 {ilan.il} / {ilan.ilce}
               </p>
 
-              {/* Fiyat */}
               <p className="text-primary font-bold text-lg mb-2">
                 {ilan.ucret?.toLocaleString("tr-TR")} ₺
               </p>
 
-              {/* Tarihler */}
               <p className="text-gray-500 text-sm">
                 {ilan.girisTarihi} → {ilan.cikisTarihi}
               </p>
@@ -92,3 +95,12 @@ export default function IlanlarPage() {
     </main>
   );
 }
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Yükleniyor...</p>}>
+      <IlanlarContent />
+    </Suspense>
+  );
+}
+

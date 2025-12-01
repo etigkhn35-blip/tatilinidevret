@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { db } from "@/lib/firebaseConfig";
+import { db, auth } from "@/lib/firebaseConfig";
 import {
   collection,
   query,
@@ -11,7 +11,6 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
-import { auth } from "@/lib/firebaseConfig";
 import { Bell } from "lucide-react";
 
 export default function NotificationBell() {
@@ -34,7 +33,9 @@ export default function NotificationBell() {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
       const newOnes = list.filter((i: any) => !i.read);
-      if (newOnes.length > notifications.filter((i) => !i.read).length) {
+      const oldUnread = notifications.filter((i) => !i.read).length;
+
+      if (newOnes.length > oldUnread) {
         audioRef.current?.play().catch(() => {});
       }
 
@@ -48,25 +49,23 @@ export default function NotificationBell() {
 
   /* 📌 Tıklamada Yönlendirme */
   const handleClick = (n: any) => {
-  if (n.type === "destek") {
-    window.location.href = "/hesabim/mesajlar";
-    return;
-  }
+    // DESTEK MESAJI
+    if (n.type === "destek" && n.chatId) {
+      window.location.href = `/mesajlar/${n.chatId}`;
+      return;
+    }
 
-    // MESAJ -----------------------
-     if (n.type === "message" && n.chatId) {
-    window.location.href = `/mesajlar?chat=${n.chatId}`;
-    return;
-  }
+    // NORMAL MESAJ
+    if (n.type === "message" && n.chatId) {
+      window.location.href = `/mesajlar/${n.chatId}`;
+      return;
+    }
 
-    // İLAN ------------------------
+    // İLAN BİLDİRİMİ
     if (n.type === "ilan") {
       window.location.href = "/hesabim/bildirimler";
       return;
     }
-
-    // DİĞER ------------------------
-    return;
   };
 
   /* 🔵 Okundu işaretle */

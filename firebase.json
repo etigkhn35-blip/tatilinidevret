@@ -1,16 +1,20 @@
 {
-  "functions": {
-    "source": "functions",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log"
-    ],
-    "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" run lint || echo 'skip lint'",
-      "npm --prefix \"$RESOURCE_DIR\" run build || echo 'skip build'"
-    ]
-  },
+  "functions": [
+    {
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ],
+      "source": "functions"
+    }
+  ],
   "emulators": {
     "functions": {
       "port": 5005
@@ -33,15 +37,10 @@
     },
     "singleProjectMode": true
   },
+ 
   "hosting": {
-    "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
-  },
-  "storage": {
-    "rules": "storage.rules"
+    "public": "out",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
   }
 }

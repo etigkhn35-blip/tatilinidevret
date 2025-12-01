@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { auth, db } from "@/lib/firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { title } from "process";
 
 export default function DestekTalebiPage() {
   const [user, setUser] = useState<any>(null);
@@ -19,43 +18,60 @@ export default function DestekTalebiPage() {
     return () => unsubscribe();
   }, []);
 
- const handleSubmit = async (e: any) => {
-  e.preventDefault();
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setSending(true);
 
-  const user = auth.currentUser;
-  const email = user?.email || "";
-  const adSoyad = user?.displayName || email.split("@")[0] || "Kullanıcı";
+    const user = auth.currentUser;
+    const email = user?.email || "";
+    const adSoyad =
+      user?.displayName || email.split("@")[0] || "Kullanıcı";
 
-  const baslik = title.trim();
-  const mesaj = message.trim();
+    const baslik = subject.trim();      // ✅ DÜZELTİLDİ
+    const mesaj = message.trim();
 
-  if (!baslik || !mesaj) return alert("Lütfen başlık ve mesaj girin!");
+    if (!baslik || !mesaj) {
+      alert("Lütfen başlık ve mesaj girin!");
+      setSending(false);
+      return;
+    }
 
-  // 1️⃣ Talebi kaydet
-  const talepRef = await addDoc(collection(db, "destek_talepleri"), {
-    baslik,
-    mesaj,
-    email,
-    adSoyad,
-    durum: "beklemede",
-    olusturmaTarihi: serverTimestamp(),
-  });
+    // 1️⃣ Destek talebini kaydet
+    const talepRef = await addDoc(collection(db, "destek_talepleri"), {
+      baslik,
+      mesaj,
+      email,
+      adSoyad,
+      userUid: user?.uid || null,
+      durum: "beklemede",
+      olusturmaTarihi: serverTimestamp(),
+    });
 
-  // 2️⃣ Admin bildirimi (fallback, Cloud Function yoksa)
-  await addDoc(collection(db, "notifications"), {
-    type: "support",
-    title: "Yeni destek talebi",
-    message: baslik || mesaj.slice(0, 80),
-    refCollection: "destek_talepleri",
-    refId: talepRef.id,
-    path: `/admin/destek-talepleri?open=${talepRef.id}`,
-    read: false,
-    createdAt: serverTimestamp(),
-    toAdmin: true,
-  });
+    // 2️⃣ Admin'e bildirim gönder (fallback)
+    await addDoc(collection(db, "notifications"), {
+      type: "destek",
+      title: "Yeni Destek Talebi",
+      message: baslik,
+      refCollection: "destek_talepleri",
+      refId: talepRef.id,
+      chatId: talepRef.id,
 
-  alert("Talebin başarıyla gönderildi ✅");
-};
+      // ⭐ Admin panelde doğru açılacak URL
+      path: `/admin/destek-talepleri?open=${talepRef.id}`,
+
+      read: false,
+      createdAt: serverTimestamp(),
+
+      // ⭐ Admin UID
+      toUserUid: "Presmt66LxdgLJQZareFD0Os7kL2",
+    });
+
+    alert("Talebin başarıyla gönderildi ✅");
+    setSending(false);
+    setSubject("");
+    setMessage("");
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-gray-600">
@@ -90,7 +106,7 @@ export default function DestekTalebiPage() {
               rows={6}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Yaşadığınız sorun veya önerinizi buraya yazabilirsiniz..."
+              placeholder="Yaşadığınız sorunu buraya yazın..."
               className="w-full border rounded-lg px-3 py-2"
             />
           </div>

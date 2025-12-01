@@ -19,11 +19,13 @@ type DestekTalebi = {
   mesaj: string;
   email: string;
   adSoyad?: string;
+  userUid?: string | null;   // 👈 EKLENMESİ GEREKEN ALAN
   durum?: "beklemede" | "yanıtlandı";
   olusturmaTarihi?: Timestamp | Date | number | null;
   yanit?: string;
   yanitTarihi?: Timestamp | Date | number | null;
 };
+
 
 /* ------------ Yardımcı ------------ */
 const toMillis = (t: unknown): number => {
@@ -53,20 +55,21 @@ export default function AdminDestekTalepleriPage() {
     useEffect(() => {
     const unsub = onSnapshot(collection(db, "destek_talepleri"), async (snap) => {
       const data: DestekTalebi[] = snap.docs.map((d) => {
-        const raw = d.data() as any;
-        return {
-          id: d.id,
-          baslik: raw?.baslik ?? "",
-          mesaj: raw?.mesaj ?? "",
-          email: raw?.email ?? "",
-          adSoyad: raw?.adSoyad ?? "",
-          durum: raw?.durum ?? "beklemede",
-          olusturmaTarihi:
-            raw?.olusturmaTarihi ?? raw?.createdAt ?? raw?.timestamp ?? null,
-          yanit: raw?.yanit ?? "",
-          yanitTarihi: raw?.yanitTarihi ?? null,
-        };
-      });
+  const raw = d.data() as any;
+  return {
+    id: d.id,
+    baslik: raw?.baslik ?? "",
+    mesaj: raw?.mesaj ?? "",
+    email: raw?.email ?? "",
+    adSoyad: raw?.adSoyad ?? "",
+    userUid: raw?.userUid ?? null,   // ✅ EKLENECEK SATIR
+    durum: raw?.durum ?? "beklemede",
+    olusturmaTarihi:
+      raw?.olusturmaTarihi ?? raw?.createdAt ?? raw?.timestamp ?? null,
+    yanit: raw?.yanit ?? "",
+    yanitTarihi: raw?.yanitTarihi ?? null,
+  };
+});
 
       data.sort(
         (a, b) => toMillis(b.olusturmaTarihi) - toMillis(a.olusturmaTarihi)
@@ -100,22 +103,52 @@ export default function AdminDestekTalepleriPage() {
 
 
   /* ------------ Yanıt gönder ------------ */
-  const handleYanitla = async (talep: DestekTalebi) => {
-    if (!yanit.trim()) return alert("Yanıt boş olamaz!");
-    try {
-      await updateDoc(doc(db, "destek_talepleri", talep.id), {
-        yanit,
-        durum: "yanıtlandı",
-        yanitTarihi: serverTimestamp(),
-      });
-      alert("Yanıt gönderildi ✅");
-      setSelected(null);
-      setYanit("");
-    } catch (e) {
-      console.error(e);
-      alert("Yanıt gönderilemedi.");
-    }
-  };
+ const handleYanitla = async (talep: DestekTalebi) => {
+  if (!yanit.trim()) return alert("Yanıt boş olamaz!");
+
+  try {
+    // 1️⃣ Talebi güncelle
+    await updateDoc(doc(db, "destek_talepleri", talep.id), {
+      yanit,
+      durum: "yanıtlandı",
+      yanitTarihi: serverTimestamp(),
+    });
+
+    // 2️⃣ Kullanıcıya bildirim gönder
+    const notifDoc = await addDoc(collection(db, "notifications"), {
+      type: "support_reply",
+      title: "Destek talebiniz yanıtlandı",
+      message: yanit.slice(0, 80),
+      read: false,
+      createdAt: serverTimestamp(),
+      toUserUid: talep.userUid || null,
+      destekId: talep.id,
+      path: `/mesajlar?chat=${talep.id}` // geçici — API düzeltiyor
+    });
+
+    // 3️⃣ ÜCRETSİZ ÇALIŞAN API ROUTE’A CHAT EŞLEME İSTEĞİ GÖNDER
+    await fetch("/api/support/mapChat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        notifId: notifDoc.id,
+        userUid: talep.userUid,
+        destekId: talep.id,
+        message: yanit
+      }),
+    });
+
+    alert("Yanıt gönderildi ve kullanıcı bilgilendirildi ✅");
+
+    setSelected(null);
+    setYanit("");
+
+  } catch (e) {
+    console.error("Destek yanıt hata:", e);
+    alert("Yanıt gönderilemedi.");
+  }
+};
+
 
   /* ------------ UI ------------ */
   if (loading)
