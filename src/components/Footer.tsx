@@ -17,7 +17,7 @@
 
     {/* Yasal Linkler */}
     <div>
-  <h3 className="font-semibold text-gray-900 mb-3">Yasal Linkler</h3>
+ <h3 className="font-semibold text-gray-100 mb-3">Yasal Bilgilendirme</h3>
   <ul className="space-y-2">
     <li>
       <a href="/bireysel-uyelik-sozlesmesi" className="hover:text-primary transition">

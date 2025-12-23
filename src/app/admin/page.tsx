@@ -1,5 +1,7 @@
 "use client";
-
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebaseConfig";
+import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore"; 
 import Link from "next/link";
@@ -95,6 +97,9 @@ const fmtDateTime = (t: any) => {
 
 /* ---------------------- Bileşen ------------------------ */
 export default function AdminDashboardPage() {
+  const router = useRouter();
+const [authChecked, setAuthChecked] = useState(false);
+
   const [ilanlar, setIlanlar] = useState<Ilan[]>([]);
   const [sonSohbetler, setSonSohbetler] = useState<Chat[]>([]);
   const [destekler, setDestekler] = useState<Destek[]>([]);
@@ -105,6 +110,18 @@ export default function AdminDashboardPage() {
   const [odemeler, setOdemeler] = useState<any[]>([]);
 
   useEffect(() => {
+
+const unsubAuth = onAuthStateChanged(auth, (user) => {
+    if (!user || user.email !== "info@tatilinidevret.com") {
+      router.replace("/admin-login");
+      return;
+    }
+    setAuthChecked(true);
+  });
+
+  return () => unsubAuth();
+}, [router]);
+    
     /* ---------------- Son İlanlar ---------------- */
     const qIlan = query(collection(db, "ilanlar"), orderBy("olusturmaTarihi", "desc"), limit(5));
     const unsubIlan = onSnapshot(qIlan, (snap) => {
@@ -175,7 +192,14 @@ const unsubOrders = onSnapshot(qOrders, (snap) => {
       unsubRaporlar();
       unsubOrders();
     };
-  }, []);
+    if (!authChecked) {
+  return (
+    <div className="min-h-screen flex items-center justify-center text-gray-500">
+      Yetkilendirme kontrol ediliyor...
+    </div>
+  );
+}
+  
 
   /* ---------------- Özetler ---------------- */
   const toplamIlan = ilanlar.length;

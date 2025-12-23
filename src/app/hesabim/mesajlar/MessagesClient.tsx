@@ -4,8 +4,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = false;
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { auth, db } from "@/lib/firebaseConfig";
 import {
   collection,
@@ -18,8 +17,6 @@ import {
   doc,
   updateDoc,
   getDoc,
-  deleteDoc,
-  getDocs,
 } from "firebase/firestore";
 
 export default function MessagesClient() {
@@ -30,17 +27,13 @@ export default function MessagesClient() {
   const [newMessage, setNewMessage] = useState("");
   const [loadingAuth, setLoadingAuth] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [lastSeenUpdatedAt, setLastSeenUpdatedAt] = useState<number>(0);
 
-  const search = useSearchParams();
-  const chatFromUrl = search.get("chat");
-
-  /* -------- Ses -------- */
+  /* 🔊 Bildirim sesi */
   useEffect(() => {
     audioRef.current = new Audio("/sounds/notify.mp3");
   }, []);
 
-  /* -------- Kullanıcı -------- */
+  /* 👤 Auth */
   useEffect(() => {
     return auth.onAuthStateChanged((user) => {
       setMeUid(user ? user.uid : null);
@@ -48,65 +41,76 @@ export default function MessagesClient() {
     });
   }, []);
 
-  /* -------- Sohbet Listesi -------- */
+  /* 💬 Sohbet listesi */
   useEffect(() => {
     if (!meUid) return;
 
-    const q = query(collection(db, "messages"), where("participants", "array-contains", meUid));
+    const q = query(
+      collection(db, "messages"),
+      where("participants", "array-contains", meUid)
+    );
 
     const unsub = onSnapshot(q, async (snap) => {
       const list: any[] = [];
 
       for (const d of snap.docs) {
         const data = d.data();
-        const otherUser = (data.participants || []).find((p: string) => p !== meUid);
+        const otherUid = data.participants.find((p: string) => p !== meUid);
 
-        let email = "Bilinmeyen Kullanıcı";
-        if (otherUser) {
-          const userDoc = await getDoc(doc(db, "users", otherUser));
-          if (userDoc.exists()) {
-            email = userDoc.data()?.email || email;
+        let displayName = "Kullanıcı";
+        let isAdmin = false;
+
+        if (otherUid) {
+          const uDoc = await getDoc(doc(db, "users", otherUid));
+          if (uDoc.exists()) {
+            const u = uDoc.data();
+            const email = u?.email || "";
+
+            if (email === "info@tatilinidevret.com") {
+              displayName = "Yönetici";
+              isAdmin = true;
+            } else if (u?.ad || u?.soyad) {
+              displayName = `${u.ad || ""} ${u.soyad || ""}`.trim();
+            } else if (email) {
+              displayName = email;
+            }
           }
         }
 
+        const lastRead = data.lastRead?.[meUid]?.toMillis?.() || 0;
+        const updatedAt = data.updatedAt?.toMillis?.() || 0;
+        const unread = updatedAt > lastRead && data.lastSenderId !== meUid;
+
         list.push({
           id: d.id,
-          email,
+          displayName,
+          isAdmin,
+          unread,
           ...data,
           updatedAt: data.updatedAt || data.createdAt,
         });
       }
 
-      list.sort((a, b) => {
-        const at = a.updatedAt?.toMillis?.() || 0;
-        const bt = b.updatedAt?.toMillis?.() || 0;
-        return bt - at;
-      });
+      list.sort(
+        (a, b) =>
+          (b.updatedAt?.toMillis?.() || 0) -
+          (a.updatedAt?.toMillis?.() || 0)
+      );
 
       setChats(list);
-
-      const newest = list[0]?.updatedAt?.toMillis?.() || 0;
-      const lastSender = list[0]?.lastSenderId;
-      if (
-        newest > lastSeenUpdatedAt &&
-        lastSeenUpdatedAt !== 0 &&
-        lastSender !== meUid &&
-        audioRef.current
-      ) {
-        try {
-          audioRef.current.currentTime = 0;
-          await audioRef.current.play();
-        } catch {}
-      }
-      setLastSeenUpdatedAt(newest);
     });
 
     return () => unsub();
-  }, [meUid, lastSeenUpdatedAt]);
+  }, [meUid]);
 
-  /* -------- Chat aç -------- */
-  const openChat = (chat: any) => {
+  /* 📬 Chat aç */
+  const openChat = async (chat: any) => {
     setSelectedChat(chat);
+
+    // 👁️ Okundu işaretle
+    await updateDoc(doc(db, "messages", chat.id), {
+      [`lastRead.${meUid}`]: serverTimestamp(),
+    });
 
     const q = query(
       collection(db, "messages", chat.id, "messages"),
@@ -120,7 +124,7 @@ export default function MessagesClient() {
     });
   };
 
-  /* -------- Mesaj gönder -------- */
+  /* ✉️ Mesaj gönder */
   const sendMessage = async () => {
     if (!selectedChat || !newMessage.trim() || !meUid) return;
 
@@ -136,64 +140,54 @@ export default function MessagesClient() {
       updatedAt: serverTimestamp(),
     });
 
-    const other = selectedChat.participants.find((p: string) => p !== meUid);
-
-    if (other) {
-      await addDoc(collection(db, "notifications"), {
-        toUserUid: other,
-        title: "Yeni mesaj 💬",
-        message: newMessage.slice(0, 80),
-        type: "message",
-        read: false,
-        createdAt: serverTimestamp(),
-        chatId: selectedChat.id,
-      });
-    }
-
     setNewMessage("");
   };
 
   if (loadingAuth) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        Yükleniyor...
-      </main>
-    );
+    return <div className="min-h-screen flex items-center justify-center">Yükleniyor…</div>;
   }
 
   return (
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-[320px,1fr] gap-6">
-        {/* Sol liste */}
-        <div className="bg-white rounded-2xl shadow p-4 overflow-y-auto max-h-[80vh]">
+
+        {/* 📂 Sol */}
+        <div className="bg-white rounded-2xl shadow p-4 max-h-[80vh] overflow-y-auto">
           <h2 className="text-lg font-semibold mb-3">Mesajlarım</h2>
 
-          {chats.length === 0 ? (
-            <p className="text-gray-500 text-sm">Henüz sohbet yok.</p>
-          ) : (
-            <ul className="space-y-2">
-              {chats.map((c) => (
-                <li
-                  key={c.id}
-                  className={`p-3 rounded-xl border hover:bg-gray-50 transition ${
-                    selectedChat?.id === c.id ? "bg-blue-50 border-blue-400" : ""
-                  }`}
-                  onClick={() => openChat(c)}
-                >
+          <ul className="space-y-2">
+            {chats.map((c) => (
+              <li
+                key={c.id}
+                onClick={() => openChat(c)}
+                className={`p-3 rounded-xl border cursor-pointer ${
+                  selectedChat?.id === c.id ? "bg-blue-50 border-blue-400" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between">
                   <p className="font-semibold">{c.ilanBaslik || "Sohbet"}</p>
-                  <p className="text-sm text-gray-500">{c.email}</p>
-                </li>
-              ))}
-            </ul>
-          )}
+                  {c.unread && <span className="w-2 h-2 bg-blue-600 rounded-full" />}
+                </div>
+
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm text-gray-600">{c.displayName}</span>
+                  {c.isAdmin && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-600 text-white font-semibold">
+                      Yönetici
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Sağ mesaj alanı */}
+        {/* 💬 Sağ */}
         <div className="bg-white rounded-2xl shadow flex flex-col h-[80vh]">
           {selectedChat ? (
             <>
-              <div className="p-4 border-b">
-                <h3 className="font-semibold">{selectedChat.ilanBaslik || "Sohabet"}</h3>
+              <div className="p-4 border-b font-semibold">
+                {selectedChat.ilanBaslik || "Sohbet"}
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -221,8 +215,8 @@ export default function MessagesClient() {
                 <input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Mesaj..."
                   className="flex-1 border rounded-full px-4 py-2"
+                  placeholder="Mesaj..."
                 />
                 <button
                   onClick={sendMessage}

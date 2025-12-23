@@ -8,7 +8,6 @@ import {
   signInWithPopup,
   signInWithRedirect,
   GoogleAuthProvider,
-  OAuthProvider,
 } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 
@@ -20,85 +19,53 @@ export default function GirisPage() {
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-    try {
+  try {
+    const userCred = await signInWithEmailAndPassword(
+      auth,
+      email.trim(),
+      sifre
+    );
 
-      const getRecaptchaToken = async (action: string) => {
-  if (!(window as any).grecaptcha) return null;
+    const user = userCred.user;
 
-  return await (window as any).grecaptcha.execute(
-    process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
-    { action }
-  );
-};
-      const userCred = await signInWithEmailAndPassword(auth, email.trim(), sifre);
-      console.log("✅ LOGIN OK:", userCred.user.uid);
+    // 🔐 ADMIN KONTROLÜ
+    if (user.email === "info@tatilinidevret.com") {
+      router.push("/admin");
+    } else {
       router.push("/");
-    } catch (err: any) {
-      console.error("❌ FIREBASE LOGIN ERROR:", err);
-
-      let msg = "Bir hata oluştu.";
-
-      if (err?.code === "auth/invalid-credential" || err?.code === "auth/wrong-password") {
-        msg = "E-posta veya şifre hatalı.";
-      } else if (err?.code === "auth/user-not-found") {
-        msg = "Bu e-posta ile kayıt bulunamadı.";
-      } else if (err?.code === "auth/too-many-requests") {
-        msg = "Çok fazla başarısız deneme yapıldı. Bir süre sonra tekrar deneyin.";
-      } else if (err?.code === "auth/network-request-failed") {
-        msg = "Ağ bağlantı hatası. Lütfen internetinizi kontrol edin.";
-      } else if (err?.code === "auth/operation-not-allowed") {
-        msg = "E-posta/şifre ile giriş bu projede aktif değil. (Firebase → Sign-in method kontrol et)";
-      } else if (err?.code) {
-        msg = `Firebase hatası: ${err.code}`;
-      }
-
-      setError(msg);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err: any) {
+    setError("E-posta veya şifre hatalı.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ⭐ Geliştirilmiş Google Login ⭐
   const handleGoogleLogin = async () => {
   try {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
-    router.push("/");
+
+    const userEmail = auth.currentUser?.email;
+
+    if (userEmail === "info@tatilinidevret.com") {
+      router.push("/admin");
+    } else {
+      router.push("/");
+    }
   } catch (err: any) {
-    if (err?.code === "auth/popup-closed-by-user") {
-      console.log("Kullanıcı popup'ı kapattı.");
-      return;
-    }
-    if (err?.code === "auth/cancelled-popup-request") {
-      console.log("Popup isteği iptal edildi.");
-      return;
-    }
+    if (err?.code === "auth/popup-closed-by-user") return;
+    if (err?.code === "auth/cancelled-popup-request") return;
     console.error("Google giriş hatası:", err);
   }
 };
 
-  // ⭐ Apple Login (popup güvenli)
-  const handleAppleLogin = async () => {
-  try {
-    const provider = new OAuthProvider("apple.com");
-    await signInWithPopup(auth, provider);
-    router.push("/");
-  } catch (err: any) {
-    if (err?.code === "auth/popup-closed-by-user") {
-      console.log("Kullanıcı popup'ı kapattı.");
-      return;
-    }
-    if (err?.code === "auth/cancelled-popup-request") {
-      console.log("Popup isteği iptal edildi.");
-      return;
-    }
-    console.error("Apple giriş hatası:", err);
-  }
-};
+  
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="text-center mb-6">
@@ -179,13 +146,7 @@ export default function GirisPage() {
             Google ile giriş yap
           </button>
 
-          <button
-            onClick={handleAppleLogin}
-            className="flex items-center justify-center gap-2 border border-gray-300 rounded-md py-2 hover:bg-gray-50 transition text-sm"
-          >
-            <img src="/icons/apple.svg" alt="Apple" className="w-5 h-5" />
-            Apple ile giriş yap
-          </button>
+      
         </div>
       </div>
     </main>

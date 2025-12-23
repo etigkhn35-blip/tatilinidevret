@@ -112,12 +112,20 @@ export default function SearchResultsContent() {
       .filter((it) =>
         typeof maxPrice === "number" ? (it.ucret || 0) <= maxPrice : true
       )
-      .filter((it) =>
-        keyword
-          ? (it.baslik || "").toLowerCase().includes(keyword.toLowerCase()) ||
-            (it.aciklama || "").toLowerCase().includes(keyword.toLowerCase())
-          : true
-      )
+      .filter((it) => {
+  if (!keyword) return true;
+
+  const k = keyword.toLowerCase();
+
+  return (
+    (it.baslik || "").toLowerCase().includes(k) ||
+    (it.aciklama || "").toLowerCase().includes(k) ||
+    (it.kategori || "").toLowerCase().includes(k) ||
+    (it.altKategori || "").toLowerCase().includes(k) ||
+    (it.il || "").toLowerCase().includes(k) ||
+    (it.ilce || "").toLowerCase().includes(k)
+  );
+})
       .filter((it) => {
         if (!checkIn || !checkOut) return true;
         if (!it.girisTarihi || !it.cikisTarihi) return true;

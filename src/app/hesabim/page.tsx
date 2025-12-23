@@ -192,9 +192,7 @@ export default function HesabimPage() {
               <Link href="/hesabim/profil" className="block text-sm text-gray-600 hover:text-primary">
                 Hesap Bilgileri
               </Link>
-              <Link href="/hesabim/telefon-numarasi" className="block text-sm text-gray-600 hover:text-primary">
-                Cep Telefonu Numaram
-              </Link>
+              
               
 
               <h2 className="font-semibold text-gray-700 mt-4 mb-2">DİĞER</h2>

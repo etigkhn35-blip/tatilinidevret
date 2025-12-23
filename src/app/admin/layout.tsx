@@ -37,33 +37,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [popup, setPopup] = useState<any>(null);
 
-  /* 🔐 Yönetici kontrolü */
-  useEffect(() => {
-    let isMounted = true;
+ /* 🔐 Yönetici kontrolü */
+useEffect(() => {
+  let isMounted = true;
 
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!isMounted) return;
+  const unsub = onAuthStateChanged(auth, (user) => {
+    if (!isMounted) return;
 
-      if (!user) {
-        window.location.href = "/giris";
-        return;
-      }
-
-      if (user.email === "info@tatilinidevret.com") {
-        setAuthorized(true);
-      } else {
-        alert("Bu sayfaya yalnızca info@tatilinidevret.com erişebilir.");
-        window.location.href = "/";
-      }
-
+    // ⏳ Auth kontrolü bitti
+    if (!user) {
       setChecking(false);
-    });
+      window.location.href = "/admin-login";
+      return;
+    }
 
-    return () => {
-      isMounted = false;
-      unsub();
-    };
-  }, []);
+    // ❌ Admin değilse
+    if (user.email !== "info@tatilinidevret.com") {
+      setChecking(false);
+      window.location.href = "/";
+      return;
+    }
+
+    // ✅ Admin
+    setAuthorized(true);
+    setChecking(false);
+  });
+
+  return () => {
+    isMounted = false;
+    unsub();
+  };
+}, []);
 
   /* 🖱️ Kullanıcı etkileşimi sonrası sesi etkinleştir */
   useEffect(() => {

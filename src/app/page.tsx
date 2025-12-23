@@ -328,26 +328,23 @@ const [muhteşem, setMuhteşem] = useState<Card[]>([]);
       <Header />
 
       {/* Banner */}
-      <section className="bg-gray-100 border-b border-gray-200">
-        <div className="max-w-[1200px] mx-auto px-4 py-4">
-          <img
-            src="/images/banner.jpg"
-            alt="Banner"
-            className="w-full h-[320px] md:h-[380px] lg:h-[400px] rounded-lg object-cover"
-          />
-        </div>
-      </section>
-
+    <section className="bg-gray-100 border-b border-gray-200">
+  <div className="max-w-[1200px] mx-auto px-4 py-4">
+    <img
+      src="/images/banner.jpg"
+      alt="Banner"
+      className="w-full h-auto rounded-lg"
+    />
+  </div>
+</section>
       {/* Geniş Sponsor Reklam */}
-      <section className="max-w-[800px] mx-auto px-6 py-8">
-        <div className="rounded-xl overflow-hidden border border-gray-200">
-          <img
-            src="/images/ad-wide.jpg"
-            alt="Sponsorlu Reklam"
-            className="w-full h-[100px] object-cover"
-          />
-        </div>
-      </section>
+      <section className="max-w-[800px] mx-auto px-6 py-6">
+  <img
+    src="/images/ad-wide.jpg"
+    alt="Sponsorlu Reklam"
+    className="w-full h-auto rounded-xl border border-gray-200"
+  />
+</section>
 
       {/* İçerik */}
       <main className="min-h-screen bg-white">
@@ -486,7 +483,7 @@ const [muhteşem, setMuhteşem] = useState<Card[]>([]);
 
           {/* Yasal Linkler */}
     <div>
-  <h3 className="font-semibold text-gray-900 mb-3">Yasal Linkler</h3>
+  <h3 className="font-semibold text-gray-100 mb-3">Yasal Bilgilendirme</h3>
   <ul className="space-y-2">
     <li>
       <a href="/bireysel-uyelik-sozlesmesi" className="hover:text-primary transition">
