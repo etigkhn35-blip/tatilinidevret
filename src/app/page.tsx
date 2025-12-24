@@ -2,7 +2,7 @@
 
 import Header from "../components/Header";
 import CookiePopup from "../components/CookiePopup";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { db } from "@/lib/firebaseConfig";
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { AnimatePresence } from "framer-motion";
@@ -112,7 +112,7 @@ function DiscountBadge({ indirim }: { indirim: number }) {
       <div className="absolute top-2 left-2 z-10">
         <div className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold shadow-md border border-yellow-300 bg-gradient-to-r from-yellow-200 to-yellow-500 text-yellow-900">
           <span className="text-[12px]">🏅</span>
-          Altın
+          
         </div>
       </div>
     );
@@ -124,7 +124,7 @@ function DiscountBadge({ indirim }: { indirim: number }) {
       <div className="absolute top-2 left-2 z-10">
         <div className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold shadow-md border border-gray-200 bg-gradient-to-r from-gray-100 to-gray-300 text-gray-800">
           <span className="text-[12px]">🥈</span>
-          Gümüş
+          
         </div>
       </div>
     );
@@ -145,7 +145,8 @@ function VitrinCard({ item }: { item: Card }) {
       href={`/ilan/${item.id}`}
       className="group border border-gray-200 rounded-xl overflow-hidden bg-white hover:shadow-md transition cursor-pointer block"
     >
-      <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100 relative">
+      {/* Kartlar daha küçük olsun diye oranı biraz genişlettik */}
+      <div className="aspect-[16/11] w-full overflow-hidden bg-gray-100 relative">
         <img
           src={imageSrc}
           alt={item.title}
@@ -157,28 +158,28 @@ function VitrinCard({ item }: { item: Card }) {
 
         {/* 🔥 İndirim etiketi */}
         {(item as any).indirim ? (
-          <div className="absolute top-2 right-2 bg-green-600 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-md">
+          <div className="absolute top-2 right-2 bg-green-600 text-white text-[10.5px] font-bold px-2 py-1 rounded-md shadow-md">
             %{(item as any).indirim} İndirim
           </div>
         ) : null}
 
         {/* 🔹 Devredildi ibaresi SADECE fake ilanlarda */}
         {item.isFake && (
-          <div className="absolute top-2 left-2 bg-red-600 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-md">
+          <div className="absolute top-2 left-2 bg-red-600 text-white text-[10.5px] font-semibold px-2 py-1 rounded-md shadow-md">
             Devredildi
           </div>
         )}
       </div>
 
-      {/* Kartları küçülttük */}
-      <div className="p-2.5">
-        <div className="text-[12px] text-gray-500 line-clamp-1">{item.location}</div>
-        <div className="font-semibold text-gray-900 mt-0.5 line-clamp-1 text-[13.5px]">
+      {/* Daha kompakt */}
+      <div className="p-2">
+        <div className="text-[11px] text-gray-500 line-clamp-1">{item.location}</div>
+        <div className="font-semibold text-gray-900 mt-0.5 line-clamp-1 text-[12.5px]">
           {item.title}
         </div>
 
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="text-primary font-bold text-[13px]">
+        <div className="mt-1 flex items-center justify-between">
+          <span className="text-primary font-bold text-[12.5px]">
             {item.price?.toLocaleString("tr-TR")} ₺
           </span>
         </div>
@@ -268,9 +269,11 @@ function buildFakeListings(): Card[] {
   return listings;
 }
 
-/* ----------------------------- BLOG ALANI (STATİK) ----------------------------- */
+/* ----------------------------- BLOG SLIDER (6 ADET, 3'ER 3'ER, 10sn) ----------------------------- */
+type BlogPost = { title: string; desc: string; href: string; img: string };
+
 function BlogSection() {
-  const posts = [
+  const posts: BlogPost[] = [
     {
       title: "Tatilini Devretmek Güvenli mi? 7 İpucu",
       desc: "Devir sürecinde dikkat etmen gereken kritik noktalar.",
@@ -289,7 +292,41 @@ function BlogSection() {
       href: "/blog",
       img: "/images/blog-3.jpg",
     },
+    {
+      title: "Tatil Devrinde Sözleşme Şartları: Nelere Dikkat Etmeli?",
+      desc: "Alıcı & satıcı için en kritik maddeler.",
+      href: "/blog",
+      img: "/images/blog-4.jpg",
+    },
+    {
+      title: "Bütçe Dostu Tatil: İndirimli İlanları Nasıl Bulursun?",
+      desc: "Vitrin, filtre ve doğru zamanlama tüyoları.",
+      href: "/blog",
+      img: "/images/blog-5.jpg",
+    },
+    {
+      title: "Dolandırıcılığa Karşı 9 Güvenlik Kontrolü",
+      desc: "Ödeme, kimlik ve iletişim süreçlerinde kontrol listesi.",
+      href: "/blog",
+      img: "/images/blog-6.jpg",
+    },
   ];
+
+  // 6 post => 2 sayfa (3'erli)
+  const pages = useMemo(() => {
+    const chunked: BlogPost[][] = [];
+    for (let i = 0; i < posts.length; i += 3) chunked.push(posts.slice(i, i + 3));
+    return chunked;
+  }, [posts]);
+
+  const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setPage((p) => (p + 1) % pages.length);
+    }, 10000);
+    return () => clearInterval(t);
+  }, [pages.length]);
 
   return (
     <section className="mt-10">
@@ -300,22 +337,51 @@ function BlogSection() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {posts.map((p) => (
-          <Link
-            key={p.title}
-            href={p.href}
-            className="border border-gray-200 rounded-xl overflow-hidden bg-white hover:shadow-md transition block"
+      <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden">
+        <div className="relative overflow-hidden">
+          <div
+            className="flex transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${page * 100}%)` }}
           >
-            <div className="h-36 w-full bg-gray-100 overflow-hidden">
-              <img src={p.img} alt={p.title} className="w-full h-full object-cover" />
-            </div>
-            <div className="p-3">
-              <div className="font-semibold text-gray-900 line-clamp-2 text-sm">{p.title}</div>
-              <div className="text-xs text-gray-600 mt-1 line-clamp-2">{p.desc}</div>
-            </div>
-          </Link>
-        ))}
+            {pages.map((group, idx) => (
+              <div key={idx} className="min-w-full p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {group.map((p) => (
+                    <Link
+                      key={p.title}
+                      href={p.href}
+                      className="border border-gray-200 rounded-xl overflow-hidden bg-white hover:shadow-md transition block"
+                    >
+                      <div className="h-36 w-full bg-gray-100 overflow-hidden">
+                        <img src={p.img} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="p-3">
+                        <div className="font-semibold text-gray-900 line-clamp-2 text-sm">
+                          {p.title}
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1 line-clamp-2">{p.desc}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* basit nokta göstergesi */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+            {pages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={`h-2.5 w-2.5 rounded-full border ${
+                  i === page ? "bg-gray-900 border-gray-900" : "bg-white border-gray-300"
+                }`}
+                aria-label={`Blog sayfa ${i + 1}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -344,8 +410,7 @@ export default function HomePage() {
 
           const ucret = doc.ucret || 0;
           const orjinal = doc.orjinalFiyat || doc.originalPrice || ucret;
-          const indirim =
-            orjinal > 0 ? Math.round(((orjinal - ucret) / orjinal) * 100) : 0;
+          const indirim = orjinal > 0 ? Math.round(((orjinal - ucret) / orjinal) * 100) : 0;
 
           return {
             id: d.id,
@@ -365,12 +430,12 @@ export default function HomePage() {
         const efsaneList = data.filter((i) => i.indirim >= 40);
         const muhtesemList = data.filter((i) => i.indirim >= 30 && i.indirim < 40);
 
-        setEfsane(efsaneList.slice(0, 6));
-        setMuhteşem(muhtesemList.slice(0, 6));
+        setEfsane(efsaneList.slice(0, 12));
+        setMuhteşem(muhtesemList.slice(0, 12));
 
         // ----- FAKE LİSTELER -----
         const fakeListings = buildFakeListings().filter(
-          (f) => !data.some((r) => r.category === f.category || r.subcategory === f.category)
+          (f) => !data.some((r) => (r as any).category === f.category || (r as any).subcategory === f.category)
         );
 
         // ⭐ ANA VİTRİN → en yüksek indirimli olanlar üstte
@@ -387,8 +452,8 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  // ✅ 6 sıra: Desktop 3 kolon -> 18 kart
-  const VITRIN_LIMIT = 18;
+  // Desktop 6 kolon (6x6 gibi büyür), ilk etapta 36 gösterelim
+  const VITRIN_LIMIT = 36;
   const vitrinView = vitrin.slice(0, VITRIN_LIMIT);
 
   return (
@@ -396,7 +461,7 @@ export default function HomePage() {
       <Header />
 
       {/* Banner */}
-      <section className="bg-gray-100 border-b border-gray-200">
+      <section className="bg-white border-b border-gray-200">
         <div className="max-w-[1200px] mx-auto px-4 py-4">
           <div className="relative">
             <img
@@ -405,23 +470,25 @@ export default function HomePage() {
               className="w-full h-auto rounded-lg"
             />
 
-            {/* Ücretsiz İlan Ver Butonu */}
+            {/* Ücretsiz İlan Ver Butonu (daha sağ + beyaz arka plan) */}
             <a
               href="/ilan-ver"
               className="
                 absolute
                 bottom-6
-                right-6
+                right-4
                 md:bottom-10
-                md:right-10
-                bg-orange-400
-                hover:bg-orange-500
-                text-white
+                md:right-6
+                bg-white
+                hover:bg-gray-50
+                text-orange-600
                 font-semibold
                 px-6
                 py-3
                 rounded-full
                 shadow-lg
+                border
+                border-gray-200
                 transition
               "
             >
@@ -431,53 +498,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ✅ Sponsor Reklam (ORTADA TEK) */}
-      <section className="max-w-[800px] mx-auto px-6 py-6">
-        <img
-          src="/images/ad-wide.jpg"
-          alt="Sponsorlu Reklam"
-          className="w-full h-auto rounded-xl border border-gray-200"
-        />
-      </section>
-
       {/* İçerik */}
       <main className="min-h-screen bg-white">
         <section className="max-w-[1200px] mx-auto px-4 py-6">
-          {/* ✅ Sağ sütun kaldırıldı -> 2 kolon */}
+          {/* ✅ 2 kolon */}
           <div className="grid grid-cols-1 lg:grid-cols-[256px_1fr] gap-6">
             <CategoryAccordion />
 
             {/* Orta Alan */}
             <section>
-              {/* 🔥 EFSANE FIRSATLAR (%40+) */}
-              {efsane.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                    🔥 Efsane Fırsatlar (%40+ İndirim)
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {efsane.map((v) => (
-                      <VitrinCard key={v.id} item={v} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ✨ MUHTEŞEM İLANLAR (%30–40) */}
-              {muhteşem.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                    ✨ Muhteşem İlanlar (%30–40 İndirim)
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {muhteşem.map((v) => (
-                      <VitrinCard key={v.id} item={v} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Ana Vitrin */}
+              {/* ✅ Anasayfa vitrini en üstte */}
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold text-gray-900">Anasayfa Vitrini</h2>
                 <a href="/tum-ilanlar" className="text-sm text-primary hover:underline">
@@ -489,8 +519,8 @@ export default function HomePage() {
                 <p className="text-center text-gray-500 py-6">İlanlar yükleniyor...</p>
               ) : (
                 <AnimatePresence mode="popLayout">
-                  {/* ✅ Kartlar daha kompakt + 6 sıra (18 kart) */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3">
+                  {/* ✅ Kartlar küçüldü + desktop 6 kolon */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {vitrinView.map((v) => (
                       <VitrinCard key={v.id} item={v} />
                     ))}
@@ -498,8 +528,42 @@ export default function HomePage() {
                 </AnimatePresence>
               )}
 
-              {/* ✅ BLOG ALANI */}
+              {/* ✅ Sponsor Reklam vitrinden SONRA */}
+              <section className="max-w-[800px] mx-auto px-0 py-6">
+                <img
+                  src="/images/ad-wide.jpg"
+                  alt="Sponsorlu Reklam"
+                  className="w-full h-auto rounded-xl border border-gray-200"
+                />
+              </section>
+
+              {/* ✅ Efsane & Harika vitrin altına taşındı, başlık yanında extra yazı yok */}
+              {efsane.length > 0 && (
+                <div className="mt-2 mb-8">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-3">🔥 Efsane Fırsatlar</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {efsane.map((v) => (
+                      <VitrinCard key={v.id} item={v} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {muhteşem.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-3">✨ Harika Fırsatlar</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {muhteşem.map((v) => (
+                      <VitrinCard key={v.id} item={v} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ✅ Blog slider (6 adet, 3'er 3'er, 10sn) */}
               <BlogSection />
+
+              {/* Not: Arama çubuğu genişlik/hiza Header component içinde; bunu page.tsx’ten değiştiremeyiz */}
             </section>
           </div>
         </section>

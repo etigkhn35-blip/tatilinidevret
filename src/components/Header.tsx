@@ -150,6 +150,27 @@ export default function Header() {
             <span style={{ color: "#00AEEF" }}>tatilini</span>
             <span style={{ color: "#FF6B00" }}>devret</span>
           </Link>
+           {/* 🔍 Arama (logo ile yan yana) */}
+  <form
+    onSubmit={handleSearch}
+    className="hidden md:flex items-center max-w-md w-full"
+  >
+    <input
+      type="text"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Tatil, otel, villa ara..."
+      className="w-full border border-gray-300 rounded-l-lg px-3 py-2 text-[13px] focus:ring-2 focus:ring-[color:#00AEEF] outline-none"
+    />
+    <button
+      type="submit"
+      className="bg-[color:#00AEEF] text-white px-3 py-2 rounded-r-lg hover:opacity-90 transition"
+      aria-label="Ara"
+    >
+      <Search className="w-4 h-4" />
+    </button>
+  </form>
+
 
           {/* Mobil hamburger */}
           <button
@@ -258,21 +279,21 @@ export default function Header() {
           </div>
         </div>
 
-        {/* ARAMA SATIRI */}
+
         <div className="mt-3 flex flex-col md:flex-row md:items-center gap-2">
           <form onSubmit={handleSearch} className="flex items-center gap-2 w-full">
             <div className="flex items-center w-full">
               <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Tatil, otel, villa, etkinlik ara..."
-                className="w-full border border-gray-300 rounded-l-lg px-4 py-2 text-[13px] focus:ring-2 focus:ring-[color:#00AEEF] outline-none"
+                //type="text"
+                //value={searchTerm}
+                //onChange={(e) => setSearchTerm(e.target.value)}
+                //placeholder="Tatil, otel, villa, etkinlik ara..."
+               // className="w-full border border-gray-300 rounded-l-lg px-4 py-2 text-[13px] focus:ring-2 focus:ring-[color:#00AEEF] outline-none"
               />
               <button
-                type="submit"
-                className="bg-[color:#00AEEF] text-white px-3 py-2 text-[13px] rounded-r-lg hover:opacity-90 transition"
-                aria-label="Ara"
+                //type="submit"
+                //className="bg-[color:#00AEEF] text-white px-3 py-2 text-[13px] rounded-r-lg hover:opacity-90 transition"
+                //aria-label="Ara"
               >
                 <Search className="w-4 h-4" />
               </button>
