@@ -461,42 +461,45 @@ export default function HomePage() {
       <Header />
 
       {/* Banner */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-[1200px] mx-auto px-4 py-4">
-          <div className="relative">
-            <img
-              src="/images/banner.jpg"
-              alt="Planlar Değişir – Tatilini Devret"
-              className="w-full h-auto rounded-lg"
-            />
+     <section className="bg-gray-100 border-b border-gray-200">
+  <div className="max-w-[1200px] mx-auto px-4 py-4">
+    <div className="relative">
+      {/* Banner Görsel */}
+      <img
+        src="/images/banner.jpg"
+        alt="Planlar Değişir – Tatilini Devret"
+        className="w-full h-auto rounded-lg"
+      />
 
-            {/* Ücretsiz İlan Ver Butonu (daha sağ + beyaz arka plan) */}
-            <a
-              href="/ilan-ver"
-              className="
-                absolute
-                bottom-6
-                right-4
-                md:bottom-10
-                md:right-6
-                bg-white
-                hover:bg-gray-50
-                text-orange-600
-                font-semibold
-                px-6
-                py-3
-                rounded-full
-                shadow-lg
-                border
-                border-gray-200
-                transition
-              "
-            >
-              Ücretsiz İlan Ver
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* ✅ BUTON – FOTOĞRAF ÜSTÜNE SABİTLİ */}
+      <a
+        href="/ilan-ver"
+        className="
+          absolute
+          bottom-[18%]
+          right-[12%]
+          md:bottom-[22%]
+          md:right-[18%]
+          bg-white
+          text-orange-500
+          font-semibold
+          px-6
+          py-3
+          md:px-8
+          md:py-3.5
+          rounded-full
+          shadow-lg
+          hover:bg-orange-50
+          transition
+          text-sm
+          md:text-base
+        "
+      >
+        Ücretsiz İlan Ver
+      </a>
+    </div>
+  </div>
+</section>
 
       {/* İçerik */}
       <main className="min-h-screen bg-white">
