@@ -153,7 +153,7 @@ export default function Header() {
            {/* 🔍 Arama (logo ile yan yana) */}
   <form
     onSubmit={handleSearch}
-    className="hidden md:flex items-center max-w-md w-full"
+     className="flex items-center max-w-md w-full"
   >
     <input
       type="text"
