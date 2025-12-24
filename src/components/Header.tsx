@@ -280,49 +280,7 @@ export default function Header() {
         </div>
 
 
-        <div className="mt-3 flex flex-col md:flex-row md:items-center gap-2">
-          <form onSubmit={handleSearch} className="flex items-center gap-2 w-full">
-            <div className="flex items-center w-full">
-              <input
-                //type="text"
-                //value={searchTerm}
-                //onChange={(e) => setSearchTerm(e.target.value)}
-                //placeholder="Tatil, otel, villa, etkinlik ara..."
-               // className="w-full border border-gray-300 rounded-l-lg px-4 py-2 text-[13px] focus:ring-2 focus:ring-[color:#00AEEF] outline-none"
-              />
-              <button
-                //type="submit"
-                //className="bg-[color:#00AEEF] text-white px-3 py-2 text-[13px] rounded-r-lg hover:opacity-90 transition"
-                //aria-label="Ara"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Desktop Detaylı Arama butonu */}
-            <Link
-              href="/detayli-arama"
-              className="hidden md:inline-flex border border-gray-300 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition text-[12.5px] text-gray-700 whitespace-nowrap"
-            >
-              Detaylı Arama
-            </Link>
-          </form>
-
-          {/* Mobilde hızlı aksiyon (giriş/kayıt) - menü kapalıyken de görünsün istersen burada bırak */}
-          {!user && (
-            <div className="md:hidden flex gap-2">
-              <Link href="/giris" className="flex-1 text-center border border-gray-300 px-3 py-2 rounded-lg">
-                Giriş Yap
-              </Link>
-              <Link
-                href="/kayit"
-                className="flex-1 text-center bg-[color:#00AEEF] text-white px-3 py-2 rounded-lg"
-              >
-                Hesap Aç
-              </Link>
-            </div>
-          )}
-        </div>
+        
 
         {/* MOBİL MENÜ (hamburger) */}
         {mobileMenu && (
