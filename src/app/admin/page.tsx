@@ -100,6 +100,7 @@ export default function AdminDashboardPage() {
   const router = useRouter();
 const [authChecked, setAuthChecked] = useState(false);
 
+
   const [ilanlar, setIlanlar] = useState<Ilan[]>([]);
   const [sonSohbetler, setSonSohbetler] = useState<Chat[]>([]);
   const [destekler, setDestekler] = useState<Destek[]>([]);
@@ -109,89 +110,74 @@ const [authChecked, setAuthChecked] = useState(false);
   const [expired, setExpired] = useState(0);
   const [odemeler, setOdemeler] = useState<any[]>([]);
 
-  useEffect(() => {
+ 
 
-const unsubAuth = onAuthStateChanged(auth, (user) => {
-    if (!user || user.email !== "info@tatilinidevret.com") {
-      router.replace("/admin-login");
-      return;
-    }
+useEffect(() => {
+  const unsubAuth = onAuthStateChanged(auth, (user) => {
+    if (!user) {
+  router.replace("/admin/admin-login");
+  return;
+}
     setAuthChecked(true);
   });
 
-  return () => unsubAuth();
-}, [router]);
-    
-    /* ---------------- Son İlanlar ---------------- */
-    const qIlan = query(collection(db, "ilanlar"), orderBy("olusturmaTarihi", "desc"), limit(5));
-    const unsubIlan = onSnapshot(qIlan, (snap) => {
-      setIlanlar(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
-    });
+  const qIlan = query(collection(db, "ilanlar"), orderBy("olusturmaTarihi", "desc"), limit(5));
+  const unsubIlan = onSnapshot(qIlan, (snap) => {
+    setIlanlar(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
+  });
 
-    /* ---------------- Son Mesajlar ---------------- */
-    const qChat = query(collection(db, "messages"), orderBy("updatedAt", "desc"), limit(5));
-    const unsubChat = onSnapshot(qChat, (snap) => {
-      setSonSohbetler(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
-    });
+  const qChat = query(collection(db, "messages"), orderBy("updatedAt", "desc"), limit(5));
+  const unsubChat = onSnapshot(qChat, (snap) => {
+    setSonSohbetler(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
+  });
 
-    /* ---------------- Son Destekler ---------------- */
-    const qDestek = query(collection(db, "destek_talepleri"), orderBy("olusturmaTarihi", "desc"), limit(5));
-    const unsubDestek = onSnapshot(qDestek, (snap) => {
-      setDestekler(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
-    });
+  const qDestek = query(collection(db, "destek_talepleri"), orderBy("olusturmaTarihi", "desc"), limit(5));
+  const unsubDestek = onSnapshot(qDestek, (snap) => {
+    setDestekler(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
+  });
 
-    /* ---------------- Son Kullanıcılar ---------------- */
-    const qUsers = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(5));
-    const unsubUsers = onSnapshot(qUsers, (snap) => {
-      setKullanicilar(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
-    });
-    /* ---------------- Son Ödemeler ---------------- */
-const qOrders = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(5));
-const unsubOrders = onSnapshot(qOrders, (snap) => {
-  setOdemeler(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
-});
+  const qUsers = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(5));
+  const unsubUsers = onSnapshot(qUsers, (snap) => {
+    setKullanicilar(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
+  });
 
-    /* ---------------- İlan Bildirimleri (Raporlar) ---------------- */
-    const unsubRaporlar = onSnapshot(
-      query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(10)),
-      async (snap) => {
-        const list: Rapor[] = [];
+  const qOrders = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(5));
+  const unsubOrders = onSnapshot(qOrders, (snap) => {
+    setOdemeler(snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) })));
+  });
 
-        for (const docSnap of snap.docs) {
-          const rapor = docSnap.data() as any;
-
-          let userName = "—";
-
-          if (rapor.userUid) {
-            const userRef = doc(db, "users", rapor.userUid);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-              const userData = userSnap.data();
-              userName = userData.adSoyad || userData.displayName || "—";
-            }
+  const unsubRaporlar = onSnapshot(
+    query(collection(db, "reports"), orderBy("createdAt", "desc"), limit(10)),
+    async (snap) => {
+      const list: Rapor[] = [];
+      for (const docSnap of snap.docs) {
+        const rapor = docSnap.data() as any;
+        let userName = "—";
+        if (rapor.userUid) {
+          const userSnap = await getDoc(doc(db, "users", rapor.userUid));
+          if (userSnap.exists()) {
+            const u = userSnap.data();
+            userName = u.adSoyad || u.displayName || "—";
           }
-
-          list.push({
-            id: docSnap.id,
-            ...rapor,
-            userName,
-          });
         }
-
-        setRaporlar(list);
+        list.push({ id: docSnap.id, ...rapor, userName });
       }
-    );
+      setRaporlar(list);
+    }
+  );
 
-    setLoading(false);
+  setLoading(false);
 
-    return () => {
-      unsubIlan();
-      unsubChat();
-      unsubDestek();
-      unsubUsers();
-      unsubRaporlar();
-      unsubOrders();
-    };
+  return () => {
+    unsubAuth();
+    unsubIlan();
+    unsubChat();
+    unsubDestek();
+    unsubUsers();
+    unsubOrders();
+    unsubRaporlar();
+  };
+}, [router]);
     if (!authChecked) {
   return (
     <div className="min-h-screen flex items-center justify-center text-gray-500">

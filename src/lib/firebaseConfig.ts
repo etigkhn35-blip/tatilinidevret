@@ -20,26 +20,18 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 /* ---------------------- REAL CHECK ----------------------- */
-const LOCAL_HOSTNAMES = ["localhost", "127.0.0.1", "::1"];
+const USE_EMULATOR = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true";
 
-if (
-  typeof window !== "undefined" &&
-  LOCAL_HOSTNAMES.includes(window.location.hostname)
-) {
-  console.log("🔌 LOCALHOST tespit edildi → Firebase Emulator aktif.");
+if (typeof window !== "undefined" && USE_EMULATOR) {
+  console.log("🧪 Firebase Emulator AKTİF");
 
   connectAuthEmulator(auth, "http://127.0.0.1:9100", {
     disableWarnings: true,
   });
 
-  if (process.env.NEXT_DISABLE_FIREBASE === "true") {
-  throw new Error("Firebase disabled for build");
-}
-
   connectFirestoreEmulator(db, "127.0.0.1", 8081);
   connectStorageEmulator(storage, "127.0.0.1", 9199);
 } else {
-  console.log("🌍 Production ortamı → Firebase gerçek sunucu kullanılıyor.");
+  console.log("🌍 Firebase GERÇEK ortam");
 }
 
-export { app };

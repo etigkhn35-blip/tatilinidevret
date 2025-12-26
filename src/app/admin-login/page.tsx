@@ -26,11 +26,10 @@ export default function AdminLoginPage() {
       if (cred.user.email !== "info@tatilinidevret.com") {
         await auth.signOut();
         setError("Bu panel yalnızca yöneticiye açıktır.");
-        setLoading(false);
         return;
       }
 
-      // ✅ BAŞARILI → /admin
+      // ✅ BAŞARILI → ADMIN PANEL
       router.replace("/admin");
     } catch (err) {
       setError("E-posta veya şifre hatalı.");

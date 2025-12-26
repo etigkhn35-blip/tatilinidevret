@@ -472,27 +472,36 @@ export default function HomePage() {
       />
 
       {/* ✅ SADECE BEYAZ BUTON */}
-      <a
-        href="/ilan-ver"
-        className="
-          absolute
-          bg-white
-          text-orange-500
-          font-semibold
-          px-6 py-3
-          rounded-full
-          shadow-lg
-          hover:bg-orange-50
-          transition
-        "
-        style={{
-          top: "76.4%",
-          left: "62.5%",
-          transform: "translate(-50%, 0)",
-        }}
-      >
-        Ücretsiz İlan Ver
-      </a>
+    <a
+  href="/ilan-ver"
+  className="
+    absolute
+    bg-white
+    text-orange-500
+    font-semibold
+    shadow-lg
+    hover:bg-orange-50
+    transition
+
+    /* DESKTOP */
+    px-6 py-3 text-base rounded-full
+
+    /* MOBİL */
+    max-md:px-3
+    max-md:py-1
+    max-md:text-[11px]
+    max-md:rounded-xl
+  "
+  style={{
+    top: '76.4%',
+    left: '62.5%',
+    transform: 'translate(-50%, 0)',
+  }}
+>
+  Ücretsiz İlan Ver
+</a>
+
+
 
     </div>
   </div>
