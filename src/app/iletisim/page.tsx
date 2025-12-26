@@ -8,7 +8,7 @@ export default function Iletisim() {
 
       <ul className="space-y-3">
         <li><strong>E-posta:</strong> info@tatilinidevret.com</li>
-        <li><strong>Telefon:</strong> +90 (212) 123 45 67</li>
+        <li><strong>Telefon:</strong> +90 (850) 304 84 01</li>
         <li><strong>Adres:</strong> İstanbul, Türkiye</li>
       </ul>
     </main>

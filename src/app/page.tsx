@@ -662,7 +662,7 @@ export default function HomePage() {
           <div>
             <h3 className="font-semibold text-white mb-3 text-lg">İletişim</h3>
             <p className="text-gray-700">Adres: Türkiye, İstanbul</p>
-            <p className="text-gray-700">Telefon: +90 (555) 555 55 55</p>
+            <p className="text-gray-700">Telefon: +90 (850) 304 84 01</p>
             <p className="text-gray-700">E-posta: info@tatilinidevret.com</p>
             <div className="flex justify-center gap-4 mt-3 text-gray-600">
               <a href="https://www.instagram.com/" className="hover:text-primary">

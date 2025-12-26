@@ -30,7 +30,7 @@ export default function KvkkPage() {
         <p className="text-gray-700">Veri Sorumlusu: M&G Digital Agency – Tatilini Devret</p>
         <p className="text-gray-700">Adres: Bodrum, Türkiye</p>
         <p className="text-gray-700">E-posta: info@tatilinidevret.com</p>
-        <p className="text-gray-700 mb-6">Telefon: +90 XXX XXX XX XX</p>
+        <p className="text-gray-700 mb-6">Telefon: +90 (850) 304 84 01</p>
 
         {/* 2. Hangi Kişisel Veriler İşlenmektedir */}
         <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-2">
