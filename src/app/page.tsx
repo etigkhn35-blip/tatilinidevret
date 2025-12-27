@@ -190,42 +190,73 @@ function VitrinCard({ item }: { item: Card }) {
 
 /* ----------------------------- KATEGORİ MENÜ (HEPSİ AÇIK) ----------------------------- */
 function CategoryAccordion() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
   return (
     <aside className="w-full lg:w-64 shrink-0">
       <div className="sticky top-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-3">Kategoriler</h2>
 
         <div className="space-y-2">
-          {CATEGORIES.map((c) => (
-            <div key={c.title} className="border border-gray-200 rounded-xl bg-white">
-              {/* Başlık */}
-              <div className="w-full flex items-center justify-between gap-3 px-4 py-3">
-                <span className="font-semibold text-gray-900">
-                  <span className="mr-2">{c.icon}</span>
-                  {c.title}
-                </span>
-              </div>
+          {CATEGORIES.map((c, idx) => {
+            const isOpen = openIndex === idx;
 
-              {/* Her zaman açık */}
-              <ul className="px-4 pb-3 space-y-2">
-                {c.subs.map((s) => (
-                  <li key={s}>
-                    <a
-                      href={`/kategori/${encodeURIComponent(s)}`}
-                      className="block text-sm text-gray-700 hover:text-primary"
-                    >
-                      {s}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            return (
+              <div
+                key={c.title}
+                className="border border-gray-200 rounded-xl bg-white overflow-hidden"
+              >
+                {/* BAŞLIK */}
+                <button
+                  onClick={() =>
+                    setOpenIndex(isOpen ? null : idx)
+                  }
+                  className="
+                    w-full flex items-center justify-between gap-3
+                    px-4 py-3
+                    font-semibold text-gray-900
+                    lg:cursor-default
+                  "
+                >
+                  <span>
+                    <span className="mr-2">{c.icon}</span>
+                    {c.title}
+                  </span>
+
+                  {/* Mobil ok */}
+                  <span className="lg:hidden">
+                    {isOpen ? "−" : "+"}
+                  </span>
+                </button>
+
+                {/* ALT KATEGORİLER */}
+                <ul
+                  className={`
+                    px-4 pb-3 space-y-2 text-sm
+                    ${isOpen ? "block" : "hidden"}
+                    lg:block
+                  `}
+                >
+                  {c.subs.map((s) => (
+                    <li key={s}>
+                      <a
+                        href={`/kategori/${encodeURIComponent(s)}`}
+                        className="block text-gray-700 hover:text-primary"
+                      >
+                        {s}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       </div>
     </aside>
   );
 }
+
 
 /* ----------------------------- FAKE İLANLAR ----------------------------- */
 const SUBCAT_TO_MAIN: Record<string, string> = CATEGORIES.reduce((acc, cat) => {
@@ -274,43 +305,61 @@ type BlogPost = { title: string; desc: string; href: string; img: string };
 
 function BlogSection() {
   const posts: BlogPost[] = [
-    {
-      title: "Tatilini Devretmek Güvenli mi? 7 İpucu",
-      desc: "Devir sürecinde dikkat etmen gereken kritik noktalar.",
-      href: "/blog",
-      img: "/images/blog-1.jpg",
-    },
-    {
-      title: "Erken Rezervasyon İptalinde Para Nasıl Kurtarılır?",
-      desc: "İptal koşulları + alternatif çözümler.",
-      href: "/blog",
-      img: "/images/blog-2.jpg",
-    },
-    {
-      title: "Villa, Otel, Bungalow: Hangisi Daha Avantajlı?",
-      desc: "Bütçe ve deneyime göre doğru seçimi yap.",
-      href: "/blog",
-      img: "/images/blog-3.jpg",
-    },
-    {
-      title: "Tatil Devrinde Sözleşme Şartları: Nelere Dikkat Etmeli?",
-      desc: "Alıcı & satıcı için en kritik maddeler.",
-      href: "/blog",
-      img: "/images/blog-4.jpg",
-    },
-    {
-      title: "Bütçe Dostu Tatil: İndirimli İlanları Nasıl Bulursun?",
-      desc: "Vitrin, filtre ve doğru zamanlama tüyoları.",
-      href: "/blog",
-      img: "/images/blog-5.jpg",
-    },
-    {
-      title: "Dolandırıcılığa Karşı 9 Güvenlik Kontrolü",
-      desc: "Ödeme, kimlik ve iletişim süreçlerinde kontrol listesi.",
-      href: "/blog",
-      img: "/images/blog-6.jpg",
-    },
-  ];
+  {
+    title: "Tatilini Devretmek Güvenli mi? 7 İpucu",
+    desc: "Devir sürecinde dikkat etmen gereken kritik noktalar.",
+    href: "/blog",
+    img: "/images/blog-1.jpg",
+  },
+  {
+    title: "Erken Rezervasyon İptalinde Para Nasıl Kurtarılır?",
+    desc: "İptal koşulları + alternatif çözümler.",
+    href: "/blog",
+    img: "/images/blog-2.jpg",
+  },
+  {
+    title: "Villa, Otel, Bungalow: Hangisi Daha Avantajlı?",
+    desc: "Bütçe ve deneyime göre doğru seçimi yap.",
+    href: "/blog",
+    img: "/images/blog-3.jpg",
+  },
+  {
+    title: "Tatil Devrinde Sözleşme Şartları",
+    desc: "Alıcı & satıcı için kritik maddeler.",
+    href: "/blog",
+    img: "/images/blog-4.jpg",
+  },
+  {
+    title: "Bütçe Dostu Tatil Tüyoları",
+    desc: "İndirimli ilanları doğru zamanda yakala.",
+    href: "/blog",
+    img: "/images/blog-5.jpg",
+  },
+  {
+    title: "Dolandırıcılığa Karşı 9 Güvenlik Kontrolü",
+    desc: "Ödeme ve kimlik süreçlerinde dikkat.",
+    href: "/blog",
+    img: "/images/blog-6.jpg",
+  },
+  {
+    title: "Tatil Devri Nedir? Yeni Nesil Tatil",
+    desc: "Kullanılmayan rezervasyonları değerlendirme rehberi.",
+    href: "/blog",
+    img: "/images/blog-7.jpg",
+  },
+  {
+    title: "Konaklama Devirlerinde Sık Yapılan Hatalar",
+    desc: "Bu hatalardan kaçın, paran boşa gitmesin.",
+    href: "/blog",
+    img: "/images/blog-8.jpg",
+  },
+  {
+    title: "Tatilini Devretmenin Avantajları",
+    desc: "Hem alıcı hem satıcı için kazan-kazan modeli.",
+    href: "/blog",
+    img: "/images/blog-9.jpg",
+  },
+];
 
   // 6 post => 2 sayfa (3'erli)
   const pages = useMemo(() => {
@@ -393,75 +442,99 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [efsane, setEfsane] = useState<Card[]>([]);
   const [muhteşem, setMuhteşem] = useState<Card[]>([]);
+  
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const q = query(
-          collection(db, "ilanlar"),
-          where("status", "==", "approved"),
-          orderBy("olusturmaTarihi", "desc")
-        );
+  const fetchData = async () => {
+    try {
+      const q = query(
+        collection(db, "ilanlar"),
+        where("status", "==", "approved"),
+        orderBy("olusturmaTarihi", "desc")
+      );
 
-        const snap = await getDocs(q);
+      const snap = await getDocs(q);
 
-        const data = snap.docs.map((d) => {
-          const doc = d.data() as any;
+      const data = snap.docs.map((d) => {
+        const doc = d.data() as any;
 
-          const ucret = doc.ucret || 0;
-          const orjinal = doc.orjinalFiyat || doc.originalPrice || ucret;
-          const indirim = orjinal > 0 ? Math.round(((orjinal - ucret) / orjinal) * 100) : 0;
+        const ucret = doc.ucret || 0;
+        const orjinal = doc.orjinalFiyat || doc.originalPrice || ucret;
+        const indirim =
+          orjinal > 0 ? Math.round(((orjinal - ucret) / orjinal) * 100) : 0;
 
-          return {
-            id: d.id,
-            title: doc.baslik,
-            location: `${doc.il || ""} ${doc.ilce || ""}`.trim(),
-            price: ucret,
-            original: orjinal,
-            indirim,
-            category: doc.kategori,
-            subcategory: doc.altKategori,
-            cover: doc.coverUrl || DEFAULT_IMAGES[doc.altKategori || doc.kategori || "Genel"],
-            isFake: false,
-          };
-        });
+        return {
+          id: d.id,
+          title: doc.baslik,
+          location: `${doc.il || ""} ${doc.ilce || ""}`.trim(),
+          price: ucret,
+          cover:
+            doc.coverUrl ||
+            DEFAULT_IMAGES[doc.altKategori || doc.kategori || "Genel"],
+          category: doc.kategori,
+          isFake: false,
+          indirim,
+          anasayfaVitrin: Boolean(doc.anasayfaVitrin),
+        };
+      });
 
-        // ⭐ EFSANE (%40+) & MUHTEŞEM (%30–39)
-        const efsaneList = data.filter((i) => i.indirim >= 40);
-        const muhtesemList = data.filter((i) => i.indirim >= 30 && i.indirim < 40);
+      /* 🔥 EFSANE (%40+) */
+      setEfsane(data.filter((i) => i.indirim >= 40).slice(0, 12));
 
-        setEfsane(efsaneList.slice(0, 12));
-        setMuhteşem(muhtesemList.slice(0, 12));
+      /* ✨ HARİKA (%30–39) */
+      setMuhteşem(
+        data.filter((i) => i.indirim >= 30 && i.indirim < 40).slice(0, 12)
+      );
 
-        // ----- FAKE LİSTELER -----
-        const fakeListings = buildFakeListings().filter(
-          (f) => !data.some((r) => (r as any).category === f.category || (r as any).subcategory === f.category)
-        );
+      /* 🧠 ANASAYFA VİTRİN KURALI */
+      const vitrineGirecekGercekIlanlar = data.filter((i) => {
+        if (i.indirim < 30) return true;
+        if (i.indirim >= 30 && i.anasayfaVitrin) return true;
+        return false;
+      });
 
-        // ⭐ ANA VİTRİN → en yüksek indirimli olanlar üstte
-        const sorted = [...data].sort((a, b) => b.indirim - a.indirim);
-        setVitrin([...sorted, ...fakeListings]);
-      } catch (err) {
-        console.error("❌ Firestore veri çekme hatası:", err);
-        setVitrin(buildFakeListings());
-      } finally {
-        setLoading(false);
+      /* 🔽 İndirimine göre sırala */
+      const sorted = [...vitrineGirecekGercekIlanlar].sort(
+        (a, b) => (b.indirim || 0) - (a.indirim || 0)
+      );
+
+      /* 🧱 FAKE İLANLAR */
+      const fakeListings: Card[] = buildFakeListings();
+
+      /* 🎯 HER ZAMAN 36 KART */
+      const VITRIN_TARGET = 24;
+      let vitrinFinal: Card[] = [...sorted];
+
+      if (vitrinFinal.length < VITRIN_TARGET) {
+        const need = VITRIN_TARGET - vitrinFinal.length;
+        vitrinFinal = [
+          ...vitrinFinal,
+          ...fakeListings.slice(0, need),
+        ];
       }
-    };
 
-    fetchData();
-  }, []);
+      setVitrin(vitrinFinal.slice(0, VITRIN_TARGET));
+    } catch (err) {
+      console.error("❌ Firestore veri çekme hatası:", err);
+      setVitrin(buildFakeListings().slice(0, 36));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   // Desktop 6 kolon (6x6 gibi büyür), ilk etapta 36 gösterelim
-  const VITRIN_LIMIT = 36;
-  const vitrinView = vitrin.slice(0, VITRIN_LIMIT);
-
+  const VITRIN_LIMIT = 24;
+const vitrinView: Card[] = vitrin.slice(0, VITRIN_LIMIT);
   return (
     <>
       <Header />
 
      {/* BANNER */}
-<section className="bg-gray-100 border-b border-gray-200">
+<section className="bg-gray-100 border-b border-gray-00">
   <div className="max-w-[1200px] mx-auto px-4 py-4">
     <div className="relative">
 
@@ -597,7 +670,7 @@ export default function HomePage() {
                 </a>
               </li>
               <li>
-                <a href="/ilanlar" className="hover:text-primary transition">
+                <a href="/tum-ilanlar" className="hover:text-primary transition">
                   İlanlar
                 </a>
               </li>
@@ -621,7 +694,7 @@ export default function HomePage() {
 
           {/* Yasal Linkler */}
           <div>
-            <h3 className="font-semibold text-gray-100 mb-3">Yasal Bilgilendirme</h3>
+             <h3 className="font-semibold text-white mb-3 text-lg">Yasal Bilgilendirme</h3>
             <ul className="space-y-2">
               <li>
                 <a href="/bireysel-uyelik-sozlesmesi" className="hover:text-primary transition">

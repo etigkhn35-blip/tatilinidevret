@@ -8,7 +8,7 @@
       <ul className="space-y-2">
         <li><a href="/" className="hover:text-primary transition">Ana Sayfa</a></li>
         <li><a href="/ilan-ver" className="hover:text-primary transition">İlan Ver</a></li>
-        <li><a href="/ilanlar" className="hover:text-primary transition">İlanlar</a></li>
+        <li><a href="/tum-ilanlar" className="hover:text-primary transition">İlanlar</a></li>
         <li><a href="/nasil-calisir" className="hover:text-primary transition">Nasıl Çalışır?</a></li>
         <li><a href="/yardim" className="hover:text-primary transition">SSS</a></li>
         <li><a href="/iletisim" className="hover:text-primary transition">İletişim</a></li>

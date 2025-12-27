@@ -18,6 +18,7 @@ type Card = {
   price: number;
   cover?: string;
   category?: string;
+  isFake: boolean;
 };
 
 const DEFAULT_IMAGES: Record<string, string> = {
@@ -67,27 +68,29 @@ export default function CategoryPage() {
 
         const snap = await getDocs(q);
         const data = snap.docs.map((d) => {
-          const doc = d.data() as any;
-          return {
-            id: d.id,
-            title: doc.baslik || "İsimsiz İlan",
-            location: `${doc.il || ""} ${doc.ilce || ""}`.trim(),
-            price: doc.ucret || 0,
-            category: doc.kategori || "Genel",
-            cover: doc.coverUrl || DEFAULT_IMAGES[doc.altKategori || doc.kategori || "Genel"],
-          } as Card;
-        });
+  const doc = d.data() as any;
+  return {
+    id: d.id,
+    title: doc.baslik || "İsimsiz İlan",
+    location: `${doc.il || ""} ${doc.ilce || ""}`.trim(),
+    price: doc.ucret || 0,
+    category: doc.kategori || "Genel",
+    cover: doc.coverUrl || DEFAULT_IMAGES[doc.altKategori || doc.kategori || "Genel"],
+    isFake: false, // ✅ GERÇEK İLAN
+  } as Card;
+});
 
         // 🔸 Eğer o kategoride hiç gerçek ilan yoksa örnek ilan ekle
         if (data.length === 0) {
-          const fake = {
-            id: "fake-" + decodedCategory,
-            title: `${decodedCategory} – Örnek İlan`,
-            location: "İstanbul / Beşiktaş",
-            price: 4500,
-            category: decodedCategory,
-            cover: DEFAULT_IMAGES[decodedCategory] || DEFAULT_IMAGES.Genel,
-          };
+          const fake: Card = {
+  id: "fake-" + decodedCategory,
+  title: `${decodedCategory} – Örnek İlan`,
+  location: "İstanbul / Beşiktaş",
+  price: 4500,
+  category: decodedCategory,
+  cover: DEFAULT_IMAGES[decodedCategory] || DEFAULT_IMAGES.Genel,
+  isFake: true, // ✅ SADECE BUNDA
+};
           setList([fake]);
         } else {
           setList(data);
@@ -125,9 +128,11 @@ export default function CategoryPage() {
                     alt={v.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition"
                   />
-                  <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-md shadow">
-                    Devredildi
-                  </div>
+                  {v.isFake === true && (
+  <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-md shadow">
+    Devredildi
+  </div>
+)}
                 </div>
                 <div className="p-3">
                   <div className="text-sm text-gray-500">{v.location}</div>
