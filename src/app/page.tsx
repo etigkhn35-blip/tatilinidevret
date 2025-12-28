@@ -534,14 +534,14 @@ const vitrinView: Card[] = vitrin.slice(0, VITRIN_LIMIT);
       <Header />
 
      {/* BANNER */}
-<section className="bg-gray-100 border-b border-gray-00">
-  <div className="max-w-[1200px] mx-auto px-4 py-4">
+<section className="bg-white border-b border-gray-200">
+  <div className="max-w-[1200px] mx-auto px-0 md:px-4 py-0 md:py-4">
     <div className="relative">
 
       <img
         src="/images/banner.jpg"
         alt="Planlar Değişir – Tatilini Devret"
-        className="w-full h-auto rounded-lg"
+        className="w-full h-auto rounded-none md:rounded-lg"
       />
 
       {/* ✅ SADECE BEYAZ BUTON */}
@@ -564,6 +564,8 @@ const vitrinView: Card[] = vitrin.slice(0, VITRIN_LIMIT);
     max-md:py-1
     max-md:text-[11px]
     max-md:rounded-xl
+
+    hidden md:inline-flex
   "
   style={{
     top: '76.4%',
@@ -573,8 +575,6 @@ const vitrinView: Card[] = vitrin.slice(0, VITRIN_LIMIT);
 >
   Ücretsiz İlan Ver
 </a>
-
-
 
     </div>
   </div>

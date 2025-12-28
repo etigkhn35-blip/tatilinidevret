@@ -1,40 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { db } from "@/lib/firebaseConfig";
 import {
   collection,
   getDocs,
   query,
-  where,
   orderBy,
   limit,
 } from "firebase/firestore";
 import Link from "next/link";
 
-/**
- * 🔍 Arama Sayfası
- * /arama?q=otel  → Firestore'daki ilanlarda başlık / açıklama eşleşmelerini arar
- */
-
-export default function AramaPage() {
-  const searchParams = useSearchParams();
-  const searchTerm = (searchParams.get("q") || "").trim().toLowerCase();
+export default function AramaClient({ q }: { q: string }) {
+  const searchTerm = q.trim().toLowerCase();
 
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!searchTerm) return;
+    if (!searchTerm) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
 
     const fetchResults = async () => {
       setLoading(true);
 
       try {
-        // 🔹 "ilanlar" koleksiyonunda başlık, açıklama veya kategoriye göre ara
-        const q = query(collection(db, "ilanlar"), orderBy("createdAt", "desc"), limit(50));
-        const snap = await getDocs(q);
+        const qy = query(
+          collection(db, "ilanlar"),
+          orderBy("olusturmaTarihi", "desc"),
+          limit(50)
+        );
+
+        const snap = await getDocs(qy);
 
         const list: any[] = [];
         snap.forEach((d) => {
@@ -42,11 +42,15 @@ export default function AramaPage() {
           const title = data.baslik?.toLowerCase() || "";
           const desc = data.aciklama?.toLowerCase() || "";
           const kategori = data.kategori?.toLowerCase() || "";
+          const il = data.il?.toLowerCase() || "";
+          const ilce = data.ilce?.toLowerCase() || "";
 
           if (
             title.includes(searchTerm) ||
             desc.includes(searchTerm) ||
-            kategori.includes(searchTerm)
+            kategori.includes(searchTerm) ||
+            il.includes(searchTerm) ||
+            ilce.includes(searchTerm)
           ) {
             list.push({ id: d.id, ...data });
           }
@@ -63,12 +67,13 @@ export default function AramaPage() {
     fetchResults();
   }, [searchTerm]);
 
-  if (!searchTerm)
+  if (!searchTerm) {
     return (
       <main className="min-h-screen flex items-center justify-center text-gray-500">
         Arama terimi bulunamadı.
       </main>
     );
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 py-10 px-4">
@@ -93,8 +98,8 @@ export default function AramaPage() {
               >
                 <img
                   src={
-                    ilan.kapakFoto ||
-                    `/images/defaults/${ilan.kategori || "tatil"}.jpg`
+                    ilan.coverUrl ||
+                    `/defaults/default.jpg`
                   }
                   alt={ilan.baslik}
                   className="rounded-lg w-full h-40 object-cover mb-3"
@@ -106,9 +111,9 @@ export default function AramaPage() {
                   {ilan.aciklama}
                 </p>
                 <p className="text-sm text-gray-800 font-medium mt-auto">
-                  {ilan.fiyat
-                    ? `${ilan.fiyat} ₺`
-                    : "Fiyat bilgisi bulunmuyor"}
+                  {ilan.ucret
+                    ? `${ilan.ucret.toLocaleString("tr-TR")} ₺`
+                    : "Fiyat bilgisi yok"}
                 </p>
               </Link>
             ))}

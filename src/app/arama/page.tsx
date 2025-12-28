@@ -3,6 +3,11 @@ export const revalidate = false;
 
 import AramaClient from "./AramaClient";
 
-export default function Page() {
-  return <AramaClient />;
+export default function Page({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
+  const q = searchParams.q || "";
+  return <AramaClient q={q} />;
 }
