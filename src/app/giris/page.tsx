@@ -1,15 +1,19 @@
 "use client";
+import { useState, useEffect } from "react";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
   GoogleAuthProvider,
 } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
+
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+
 
 export default function GirisPage() {
   const [email, setEmail] = useState("");
@@ -18,36 +22,69 @@ export default function GirisPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  useEffect(() => {
+  if ((window as any).grecaptcha) return;
+
+  const script = document.createElement("script");
+  script.src = "https://www.google.com/recaptcha/api.js";
+  script.async = true;
+  script.defer = true;
+  document.body.appendChild(script);
+}, []);
+
   const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
   setLoading(true);
   setError(null);
 
+const captcha = (window as any).grecaptcha?.getResponse();
+if (!captcha) {
+  setError("Lütfen robot olmadığınızı doğrulayın.");
+  setLoading(false);
+  return;
+}
+
+
   try {
     const userCred = await signInWithEmailAndPassword(
-      auth,
-      email.trim(),
-      sifre
-    );
+  auth,
+  email.trim(),
+  sifre
+);
 
-    const user = userCred.user;
+const user = userCred.user;
 
-    // 🔐 ADMIN KONTROLÜ
-    if (user.email === "info@tatilinidevret.com") {
-      router.push("/admin");
-    } else {
-      router.push("/");
-    }
+
+
+// 🔐 EMAIL doğrulanmamışsa ENGELLE
+if (!user.emailVerified) {
+  await auth.signOut();
+  setError("Lütfen e-posta adresinizi doğrulayın.");
+  return;
+}
+
+
+
+
+// 🔑 ADMIN KONTROLÜ
+if (user.email === "info@tatilinidevret.com") {
+  router.push("/admin");
+} else {
+  router.push("/");
+}
+
   } catch (err: any) {
     setError("E-posta veya şifre hatalı.");
   } finally {
     setLoading(false);
+    (window as any).grecaptcha?.reset();
   }
 };
 
   // ⭐ Geliştirilmiş Google Login ⭐
   const handleGoogleLogin = async () => {
   try {
+    
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
 
@@ -91,6 +128,8 @@ export default function GirisPage() {
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary outline-none text-sm"
             />
           </div>
+
+
           <div>
             <input
               type="password"
@@ -100,6 +139,10 @@ export default function GirisPage() {
               required
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary outline-none text-sm"
             />
+            <div
+  className="g-recaptcha"
+  data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+/>
             <div className="flex justify-between items-center mt-2">
               <label className="text-sm text-gray-600 flex items-center gap-1">
                 <input type="checkbox" className="h-3 w-3" /> Oturumum açık kalsın

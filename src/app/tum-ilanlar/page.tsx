@@ -3,17 +3,14 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  collection,
+   collection,
   getDocs,
-  addDoc,
   query,
-  where,
-  deleteDoc,
   orderBy,
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
-import { Heart, HeartOff } from "lucide-react";
+
 
 /* ---------------------------------------------------------
    TİP TANIMI
@@ -32,76 +29,12 @@ type Listing = {
    TEK İLAN KARTI
 --------------------------------------------------------- */
 function ListingCard({ item, currentUser }: { item: Listing; currentUser: any }) {
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [loadingFav, setLoadingFav] = useState(false);
-
-  // FAVORİ KONTROLÜ
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const checkFav = async () => {
-      const favQuery = query(
-        collection(db, "favorites"),
-        where("userUid", "==", currentUser.uid),
-        where("ilanId", "==", item.id)
-      );
-
-      const snapshot = await getDocs(favQuery);
-      setIsFavorited(!snapshot.empty);
-    };
-
-    checkFav();
-  }, [currentUser, item.id]);
-
-  // FAVORİ EKLE / ÇIKAR
-  const toggleFavorite = async () => {
-    if (!currentUser) {
-      window.location.href = "/giris";
-      return;
-    }
-
-    setLoadingFav(true);
-    try {
-      const favQuery = query(
-        collection(db, "favorites"),
-        where("userUid", "==", currentUser.uid),
-        where("ilanId", "==", item.id)
-      );
-      const snap = await getDocs(favQuery);
-
-      if (!snap.empty) {
-        await deleteDoc(snap.docs[0].ref);
-        setIsFavorited(false);
-      } else {
-        await addDoc(collection(db, "favorites"), {
-          userUid: currentUser.uid,
-          ilanId: item.id,
-          createdAt: new Date(),
-        });
-        setIsFavorited(true);
-      }
-    } catch (error) {
-      console.error("Favori hatası:", error);
-    } finally {
-      setLoadingFav(false);
-    }
-  };
-
+  
+  
+ 
   return (
     <div className="group border border-gray-200 rounded-xl overflow-hidden bg-white hover:shadow-lg transition relative">
-      {/* FAVORİ BUTONU */}
-      <button
-        onClick={toggleFavorite}
-        disabled={loadingFav}
-        className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-2 shadow"
-      >
-        {isFavorited ? (
-          <HeartOff className="w-5 h-5 text-red-500" />
-        ) : (
-          <Heart className="w-5 h-5 text-gray-600" />
-        )}
-      </button>
-
+      
       <Link href={`/ilan/${item.id}`}>
         <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
           <img
