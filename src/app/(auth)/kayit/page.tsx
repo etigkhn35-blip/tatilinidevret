@@ -82,20 +82,14 @@ export default function RegisterPage() {
     await sendEmailVerification(user);
 
 setMessage(
-  "📩 Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın. Ardından telefon doğrulama adımına geçeceksiniz."
+ "📩 Kayıt başarılı! E-posta adresinize doğrulama maili gönderdik. " +
+  "Lütfen maildeki linke tıklayıp hesabınızı doğrulayın. " +
+  "Doğrulama yaptıktan sonra giriş yapabilirsiniz."
 );
 
-// ⏳ Telefon doğrulama sayfasına yönlendir
-setTimeout(() => {
-  //router.push("/telefon-dogrula");
-  router.push("/giris");
-}, 2000);
 
-    // ⏳ Giriş sayfasına yönlendir
-    setTimeout(() => {
-      router.push("/giris");
-    }, 2000);
 
+    
   } catch (err: any) {
   console.error("❌ Kayıt hatası:", err);
 
